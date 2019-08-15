@@ -8,16 +8,16 @@
 % F: Hypothesis function;
 % K: Kernel matrix;
 
-function [a, F, K, iter] = trainFastron(X, y, iterMax, Smax, beta, g, a, F, K)
+function [a, F, K, iter] = trainFastron(X, y, f, iterMax, Smax, beta, g, a, F, K)
 % Train or update Fastron model
 
 % "train Fastron from scratch" mode if not enough input arguments
 % "update Fastron" mode if true.
-if nargin < 7
+if nargin < 8
+    
     a = zeros(size(X,1),1); % weight of each point in data
     F = a; % hypothesis function we are learning, evaluated at each point of data
-    r2 = 1+g/2*pdist2(X, X).^2; 
-    K = 1./(r2.*r2);
+    K = f(X, X, g); % compute kernel
 %     K = exp(-g*pdist2(X,X).^2);
 else
     idx = find(a.*y < 0);
