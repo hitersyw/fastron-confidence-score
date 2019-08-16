@@ -1,4 +1,4 @@
-dataset = "circle";
+dataset = "CSpace1";
 
 % Hyper-parameters for Fastron learning;
 iterMax = 5000;
@@ -7,8 +7,8 @@ beta = 1.;
 Smax = 2000;
 num_bins = 10;
 
-x_min = [-2, -2];
-x_max = [2, 2];
+x_min = [-4, -4];
+x_max = [4, 4];
 r = 1;
 
 % training_file = "./circle_training.csv";
@@ -24,9 +24,8 @@ test_file = sprintf(test_file_spec, dataset);
 % Plot test set;
 figure('NumberTitle', 'off');
 subplot(2,3,1);
-dist_test = pdist2([0 0], X_test).';
-x1 = X_test(dist_test <= r, :);
-x2 = X_test(dist_test > r, :);
+x1 = X_test(y_test == 1, :);
+x2 = X_test(y_test == -1, :);
 
 scatter(x1(:, 1), x1(:, 2), 'r', 'filled');
 hold on;
@@ -71,7 +70,7 @@ w_lr = values.coef;
 b_lr = values.intercept;
 data = values.test_output;
 y_pred_lr = data(:,1);
-pr_lr = data(:, 3);
+p_lr = data(:, 3);
 
 x_pos = X_test(y_pred_lr == 1, :);
 x_neg = X_test(y_pred_lr == -1, :);
@@ -108,10 +107,10 @@ title("Multi-layer Perceptron");
 %% Reliability diagrams; 
 p_rq = 1./(1 + exp(-F_test_rq));
 p_rbf = 1./(1 + exp(-F_test_rbf));
-plotReliability([p_rq(:), p_rbf(:), p_lr(:) p_mlp], y_test, num_bins, ...
-     ["Fastron RQ" "Fastron RBF" "LogRegression" "MLP"]); 
-% plotReliability([p_lr(:), p_mlp], y_test, num_bins, ...
-%   ["LogRegression" "MLP"]); 
+plotReliability([p_rq(:) p_rbf(:) p_lr(:) p_mlp(:)], y_test, num_bins, ...
+      ["Fastron RQ" "Fastron RBF" "LogRegression" "MLP"]); 
+% plotReliability([p_lr(:), p_mlp(:)], y_test, num_bins, ...
+%     ["LogRegression" "MLP"]); 
 
 %% Probability plots
 [X2,Y2] = meshgrid(linspace(x_min(1), x_max(1),100), linspace(x_min(2),x_max(2),100));
@@ -121,7 +120,7 @@ figure('NumberTitle', 'off', 'Name', 'Probability grayscale');
 img_rq = zeros(size(X2)); % n x m; 
 K_rq = rq([X2(:) Y2(:)], X_train(a~=0,:), g);
 img_rq(:) = 1./(1 + exp(-K_rq*a(a~=0)));
-subplot(2,2,1), imshow(flip(img_fastron,1));
+subplot(2,2,1), imshow(flip(img_rq,1));
 title("Fastron RQ kernel");
 
 % Fastron RBF
@@ -138,7 +137,7 @@ img_lr(:) = 1./(1 + exp(-y.*([X2(:) Y2(:)] * w_lr' + b_lr)));
 subplot(2,2,3), imshow(flip(img_lr,1));
 title("Logistic Regression");
 
-% NN; (Need to build a NN here)
+% NN; 
 img_mlp = zeros(size(X2));
 h1 = ([X2(:) Y2(:)] * w_mlp{1} + b_mlp{1}');
 h1(h1 < 0) = 0; % a1

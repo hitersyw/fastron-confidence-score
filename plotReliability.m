@@ -2,17 +2,17 @@
 function plotReliability(prob, y_true, num_bins, model)
   res = 1./ num_bins; 
   bins = ceil(prob/res);
-  predicted = zeros(size(prob));
-  fraction = zeros(size(prob));
-  counts = zeros(size(prob));
+  predicted = zeros(num_bins, size(model,2));
+  fraction = zeros(num_bins, size(model,2));
+  counts = zeros(num_bins, size(model,2));
   % Update the predicted_sum, fraction of positives and counts;
-  for j = 1:size(model)
-      for i = 1:size(prob, 1)
-          predicted(bins(i,j), j) = predicted(bins(i,j), j) + prob(i,j);
+  for i=1:size(prob, 1)
+      for j=1:size(prob, 2)
+          predicted(bins(i,j),j) = predicted(bins(i,j),j) + prob(i,j);
           if y_true(i) == 1
-              fraction(bins(i,j),j) = fraction(bins(i,j), j) + 1;
+              fraction(bins(i,j),j) = fraction(bins(i,j),j) + 1;
           end
-          counts(bins(i,j)) = counts(bins(i,j)) + 1;
+          counts(bins(i,j), j) = counts(bins(i,j), j) + 1;
       end
   end
   
@@ -41,7 +41,7 @@ function plotReliability(prob, y_true, num_bins, model)
   a2 = [];
   l2 = [];
   for j = 1:size(model, 2)
-      b = histogram(prob(:,j), num_bins);
+      b = histogram(prob(:,j), 'NumBins', num_bins, 'DisplayStyle','stairs');
       l = model(j);
       a2 = [a2; b];
       l2 = [l2; l];
