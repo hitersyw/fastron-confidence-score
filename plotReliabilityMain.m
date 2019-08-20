@@ -114,20 +114,10 @@ F_holdout_lr = K_holdout * w_lr' + b_lr;
 p_lr_calibrated = 1./(1 + exp(A_lr.*F_test_rbf + B_lr));
 
 %% Calibration NN;
-h1 = X_holdout * w_mlp{1} + b_mlp{1}';
-h1(h1 < 0) = 0; % a1
-h2 = h1 * w_mlp{2} + b_mlp{2}';
-h2(h2 < 0) = 0; % a2
-F_holdout_mlp = h2 * w_mlp{3} + b_mlp{3}';
+F_holdout_mlp = feedforward(X_holdout, w_mlp, b_mlp);
 [A_mlp, B_mlp] = trainPlattScaling(F_holdout_mlp, y_holdout, iterMax, eps, lr);
 
-
-% TODO: Refactor feedfoward into a separate function;
-h1 = X_test * w_mlp{1} + b_mlp{1}';
-h1(h1 < 0) = 0; % a1
-h2 = h1 * w_mlp{2} + b_mlp{2}';
-h2(h2 < 0) = 0; % a2
-F_test_mlp = h2 * w_mlp{3} + b_mlp{3}';
+F_test_mlp = feedforward(X_test, w_mlp, b_mlp);
 p_mlp_calibrated = 1./(1 + exp(A_mlp.* F_test_mlp + B_mlp));
 
 %% Reliability diagrams; 
@@ -181,11 +171,7 @@ title("Multi-layer Perceptron");
 
 % NN Calibrated;
 img_mlp_calibrated = zeros(size(X2));
-h1 = ([X2(:) Y2(:)] * w_mlp{1} + b_mlp{1}');
-h1(h1 < 0) = 0; % a1
-h2 = h1 * w_mlp{2} + b_mlp{2}';
-h2(h2 < 0) = 0; % a2
-h3 = h2 * w_mlp{3} + b_mlp{3}';
-img_mlp_calibrated(:) = 1./ (1 + exp(A_mlp.*(h3)+B_mlp));
+F_mlp_test = feedforward([X2(:) Y2(:)], w_mlp, b_mlp);
+img_mlp_calibrated(:) = 1./ (1 + exp(A_mlp.*(F_mlp_test)+B_mlp));
 subplot(3,2,6), imshow(flip(img_mlp_calibrated,1));
 title("Multi-layer Perceptron Calibrated");
