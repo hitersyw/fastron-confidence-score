@@ -2,3 +2,6 @@
 .ipynb_checkpoints/
 *.m~
 Results/
+DiscriminativeModels.ipynb
+data/
+*.json

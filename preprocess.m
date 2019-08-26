@@ -1,6 +1,6 @@
 % Script for preprocessing a dataset into training, validation and
 % test-set;
-dataset = "CSpace1";
+dataset = "circle";
 fractions = [.6, .2, .2]; % fraction of training, validation, test set;
 names = ["training", "validation","test"];
 spec = "./data/%s.txt";

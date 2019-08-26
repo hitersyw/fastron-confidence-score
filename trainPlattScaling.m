@@ -8,10 +8,11 @@ function [A, B] = trainPlattScaling(F, y, maxIter, eps, lr, A, B)
     if nargin < 6
         A = 0; B = 0;
     end
+    
     p = 1./(1 + exp(A * F + B));
     t = (y + 1) / 2;
     t(t==1) = (sum(t==1) + 1)/(sum(t==1) + 2);
-    t(t==0) = 1./(sum(t==0)+2); % see paper for treatment of the target values
+    t(t==0) = 1./(sum(t==0)+2); % see paper for treatment of the target values;
     l = -(t'*log(p)+(1-t)'*log(1-p));
     display(sprintf('Initial Loss: %f',l));
     
@@ -27,7 +28,7 @@ function [A, B] = trainPlattScaling(F, y, maxIter, eps, lr, A, B)
         B = B + lr * sum(p - t); 
         p = 1./(1 + exp(A * F + B));
         l = -(t'*log(p)+(1-t)'*log(1-p));
-        display(sprintf('Loss at the %d iteration: %f', i, l));
+        % display(sprintf('Loss at the %d iteration: %f', i, l));
         i = i + 1;
         errors_d = [errors_d, old_l - l]; 
         start = max(1,size(errors_d,2)-9);

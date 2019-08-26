@@ -1,6 +1,7 @@
 % Reliability plot for discriminative models;
 function plotReliability(prob, y_true, num_bins, model)
   res = 1./ num_bins; 
+  prob(prob == 0)=0.1^(12); % infinitestimal jitter;
   bins = ceil(prob/res);
   predicted = zeros(num_bins, size(model,2));
   fraction = zeros(num_bins, size(model,2));
