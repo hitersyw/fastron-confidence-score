@@ -27,8 +27,13 @@ training_file = sprintf(training_file_spec, dataset);
 validation_file = sprintf(validation_file_spec, dataset);
 test_file = sprintf(test_file_spec, dataset);
 [X_train, y_train] = loadData2(training_file);
+% y_train(y_train == -1, :)=0;
+
 [X_holdout, y_holdout] = loadData2(validation_file);
+% y_holdout(y_holdout == -1, :)=0;
+
 [X_test, y_test] = loadData2(test_file);
+% y_test(y_test == -1, :)=0;
 
 %% Plot test set;
 figure('NumberTitle', 'off');
@@ -48,6 +53,7 @@ F_test_rbf = K_test_rbf*a;
 x_pos = X_test(F_test_rbf >= 0, :);
 x_neg = X_test(F_test_rbf < 0, :);
 p_rbf = 1./(1 + exp(-F_test_rbf)); % without calibration;
+y_pred_fastron = sign(F_test_rbf);
 
 subplot(2,3,2);
 scatter(x_pos(:, 1), x_pos(:,2), 8, 'r', 'filled');
@@ -55,6 +61,10 @@ hold on;
 scatter(x_neg(:, 1), x_neg(:,2), 8, 'b', 'filled');
 title(sprintf(title_spec, "Fastron RBF", sum(sign(F_test_rbf)==y_test)/size(y_test,1)));
 
+% results(1,1,:) = (sign(F_test_rbf) == 1 && y_test == 1);
+% results(1,2,:) = (sign(F_test_rbf) == 1 && y_test ~= 1);
+% results(1,3,:) = (sign(F_test_rbf) ~= 1 && y_test ~= 1);
+% results(1,4,:) = (sign(F_test_rbf) ~= 1 && y_test == 1);
 %% Load output from LR
 log_reg_file_spec = "./sgd_%s.json";
 log_reg_file=sprintf(log_reg_file_spec,dataset);
@@ -104,7 +114,6 @@ scatter(x_pos(:, 1), x_pos(:,2), 8, 'r','filled');
 hold on;
 scatter(x_neg(:, 1), x_neg(:,2), 8, 'b','filled');
 title(sprintf(title_spec, "MLP", sum(y_pred_mlp * 2-1==y_test)/size(y_test,1)));
-
 %% Load output from bagged trees
 bagging_reg_file_spec = "./bagged_trees_%s.json";
 bagging_reg_file=sprintf(bagging_reg_file_spec,dataset);
@@ -128,7 +137,7 @@ scatter(x_neg(:, 1), x_neg(:,2), 8, 'b', 'filled');
 title(sprintf(title_spec, "Bagged Trees", sum(y_pred_bagging_test * 2-1==y_test)/size(y_test,1)));
 
 %% IVM learning
-lambda = 3;
+lambda = 5;
 useUnbiasedVersion = false;
 K = rbf(X_train, X_train, g);
 
@@ -144,6 +153,8 @@ else
     F_test_IVM = rbf(X_test, S, g)*a_ivm(1:end-1) + a_ivm(end);
 end
 p_ivm = 1./(1 + exp(-F_test_IVM));
+y_pred_ivm = sign(F_test_IVM); 
+
 x_pos = X_test(p_ivm >= 0.5, :);
 x_neg = X_test(p_ivm < 0.5, :);
 
@@ -253,8 +264,8 @@ subplot(4,2,8), imshow(flip(img_ivm_calibrated,1));
 title("IVM Calibrated");
 
 %% Bar graph for scores;
-scoreFuns = {@bceLoss, @brierScore};
-names = ["Log Loss", "Brier Score"];
+scoreFuns = {@nll, @brierScore};
+names = ["Negative Log Loss", "Brier Score"];
 for i=1:size(scoreFuns,2)
     figure('NumberTitle', 'off');
     score = zeros(4,2);
@@ -271,3 +282,44 @@ for i=1:size(scoreFuns,2)
     legend(h,l);
     title(names{i})
 end
+
+%% Table for precision, recall and confidence percentage
+results = zeros(size(X_test,1),5,4); 
+counts = [y_pred_fastron y_pred_lr_test y_pred_mlp y_pred_ivm y_pred_bagging_test ]; 
+
+for i=1:size(results,2)
+    results(:,i,1) = (counts(:,i) == 1) & (y_test == 1);
+    results(:,i,2) = (counts(:,i) == 1) & (y_test ~= 1);
+    results(:,i,3) = (counts(:,i) ~= 1) & (y_test ~= 1);
+    results(:,i,4) = (counts(:,i) ~= 1) & (y_test == 1);
+end
+acc = sum(results(:,:,1) + results(:,:,3), 1)/size(y_test, 1);
+tpr = sum(results(:,:,1),1)./(sum(results(:,:,1),1) + sum(results(:,:,2),1));
+tnr = sum(results(:,:,3),1)./(sum(results(:,:,3),1) + sum(results(:,:,4),1));
+recall_p = sum(results(:,:,1),1)./(sum(results(:,:,1),1) + sum(results(:,:,4),1));
+recall_n = sum(results(:,:,3),1)./(sum(results(:,:,3),1) + sum(results(:,:,2),1));
+
+conf = sum(p > 0.8 | p < .2, 1)/size(y_test,1);
+conf_uncalibrated = [conf(:,1:2:7),0]; % TODO: Add Bagged Trees; 
+conf_calibrated = [conf(:,2:2:8),0];
+
+T = table(acc',tpr',recall_p',tnr',recall_n', conf_uncalibrated', conf_calibrated', ...
+    'RowNames',["Fastron","LogReg","MLP","IVM","Bagged Trees"],...
+    'VariableNames',{'accuracy', 'tpr','recall_pos','tnr', 'recall_neg', ...
+    'high_confidence_uncalibrated', 'high_confidence_calibrated'
+    });
+
+% uitable('Data',T{:,:},'ColumnName', T.Properties.VariableNames,...
+%     'RowName',T.Properties.RowNames);
+% Get the table in string form.
+TString = evalc('disp(T)');
+% Use TeX Markup for bold formatting and underscores.
+TString = strrep(TString,'<strong>','\bf');
+TString = strrep(TString,'</strong>','\rm');
+TString = strrep(TString,'_','\_');
+
+% Get a fixed-width font.
+FixedWidth = get(0,'FixedWidthFontName');
+% Output the table using the annotation command.
+annotation(gcf,'Textbox','String',TString,'Interpreter','Tex',...
+    'FontName',FixedWidth,'Units','Normalized','Position',[0 0 1 1]);

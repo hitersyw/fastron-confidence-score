@@ -28,6 +28,7 @@ for k = 1:N
         
         F = K_a*a(idx);
         p = 1./(1 + exp(-F));
+        p = clip(p, 0.001);
         W = p.*(1-p);
         
         z = (F + (1./W).*(y-p));

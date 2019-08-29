@@ -30,10 +30,11 @@ for k = 1:N
         F = K_a*a(idx) + a(end);
         
         p = 1./(1 + exp(-F));
+        p = clip(p, 0.001);
         W = p.*(1-p);
         
         z = (F + (1./W).*(y-p));
-        a_temp{l} = (K_a'*(W.*K_a) + lambda * K_q)\K_a'*(W.*z);
+        a_temp{l} = pinv(K_a'*(W.*K_a) + lambda.* K_q)* K_a'*(W.*z);
         
         H(l) = -y'*K_a*a_temp{l} + ones(1,N)*log(1+exp(K_a*a_temp{l})) + lambda/2*a_temp{l}'*K_q*a_temp{l};
     end
@@ -48,7 +49,7 @@ for k = 1:N
     % calculate bias term
 %     a(end) = mean(y([find(S_mark); xls]) - K([find(S_mark); xls],:)*a(1:N));
 %     a(end) = -mean(K([find(S_mark); xls],:)*a(1:N));
-    a(end) = -0.5 * (mean(K(y~=0,:)*a(1:N)) + mean(K(y==0,:)*a(1:N)));
+    a(end) = -0.5 * (mean(K(y~=1,:)*a(1:N)) + mean(K(y==1,:)*a(1:N)));
 %     a(end) = -mean(K*a(1:N));
     a([find(S_mark); xls]) = a_temp{xls};
     

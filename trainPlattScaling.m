@@ -10,6 +10,7 @@ function [A, B] = trainPlattScaling(F, y, maxIter, eps, lr, A, B)
     end
     
     p = 1./(1 + exp(A * F + B));
+    p = clip(p, 0.001);
     t = (y + 1) / 2;
     t(t==1) = (sum(t==1) + 1)/(sum(t==1) + 2);
     t(t==0) = 1./(sum(t==0)+2); % see paper for treatment of the target values;
