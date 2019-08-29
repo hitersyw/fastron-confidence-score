@@ -1,6 +1,8 @@
 %% Setup
 clear; close all;
 
+rng(0);
+
 dataset = "CSpace1";
 
 % Hyper-parameters for Fastron learning;
@@ -115,26 +117,43 @@ hold on;
 scatter(x_neg(:, 1), x_neg(:,2), 8, 'b','filled');
 title(sprintf(title_spec, "MLP", sum(y_pred_mlp * 2-1==y_test)/size(y_test,1)));
 %% Load output from bagged trees
-bagging_reg_file_spec = "./bagged_trees_%s.json";
-bagging_reg_file=sprintf(bagging_reg_file_spec,dataset);
-fid = fopen(bagging_reg_file);
-raw = fread(fid); 
-str = char(raw'); 
-fclose(fid); 
-values = jsondecode(str);
+% bagging_reg_file_spec = "./bagged_trees_%s.json";
+% bagging_reg_file=sprintf(bagging_reg_file_spec,dataset);
+% fid = fopen(bagging_reg_file);
+% raw = fread(fid); 
+% str = char(raw'); 
+% fclose(fid); 
+% values = jsondecode(str);
+% 
+% bagging_test_output = values.test_output;
+% y_pred_bagging_test = bagging_test_output(:,1);
+% p_bagging = bagging_test_output(:, 2);
+% 
+% x_pos = X_test(y_pred_bagging_test == 1, :);
+% x_neg = X_test(y_pred_bagging_test == 0, :);
+% 
+% subplot(2,3,5);
+% scatter(x_pos(:, 1), x_pos(:,2), 8, 'r', 'filled');
+% hold on;
+% scatter(x_neg(:, 1), x_neg(:,2), 8, 'b', 'filled');
+% title(sprintf(title_spec, "Bagged Trees", sum(y_pred_bagging_test * 2-1==y_test)/size(y_test,1)));
 
-bagging_test_output = values.test_output;
-y_pred_bagging_test = bagging_test_output(:,1);
-p_bagging = bagging_test_output(:, 2);
+%% Fit bagged trees to dataset
+B = TreeBagger(10, X_train,y_train, "InBagFraction", 1.0, ...
+               'NumPredictorsToSample', 'all');
+[y_pred_bagging_test, scores_bagging_test] = predict(B, X_test);
+y_pred_bagging_test = cellfun(@str2double, y_pred_bagging_test);
+F_test_bagging = scores_bagging_test(:, 2);
+p_bagging = F_test_bagging;
 
 x_pos = X_test(y_pred_bagging_test == 1, :);
-x_neg = X_test(y_pred_bagging_test == 0, :);
+x_neg = X_test(y_pred_bagging_test == -1, :);
 
 subplot(2,3,5);
 scatter(x_pos(:, 1), x_pos(:,2), 8, 'r', 'filled');
 hold on;
 scatter(x_neg(:, 1), x_neg(:,2), 8, 'b', 'filled');
-title(sprintf(title_spec, "Bagged Trees", sum(y_pred_bagging_test * 2-1==y_test)/size(y_test,1)));
+title(sprintf(title_spec, "Bagged Trees", sum(y_pred_bagging_test==y_test)/size(y_test,1)));
 
 %% IVM learning
 lambda = 5;
@@ -166,15 +185,17 @@ title(sprintf(title_spec, "IVM", sum(sign(F_test_IVM)==y_test)/size(y_test,1)));
 
 %% Calibration Fastron
 K_holdout = rbf(X_holdout, X_train, g); % n x m; 
-F_holdout = K_holdout*a;
-[A_fastron, B_fastron] = trainPlattScaling(F_holdout, y_holdout, iterMax, eps, lr);
+F_holdout_fastron = K_holdout*a;
+[A_fastron, B_fastron] = trainPlattScaling(F_holdout_fastron, y_holdout, iterMax, eps, lr);
 
 p_rbf_calibrated = 1./(1 + exp(A_fastron.*F_test_rbf + B_fastron));
 
 %% Calibration Kernel LogReg;
 F_holdout_lr = K_holdout * w_lr' + b_lr;
 [A_lr, B_lr] = trainPlattScaling(F_holdout_lr, y_holdout, iterMax, eps, lr);
-p_lr_calibrated = 1./(1 + exp(A_lr.*F_test_rbf + B_lr));
+
+F_test_lr = K_test_rbf * w_lr' + b_lr; 
+p_lr_calibrated = 1./(1 + exp(A_lr.*F_test_lr + B_lr));
 
 %% Calibration NN;
 F_holdout_mlp = feedforward(X_holdout, w_mlp, b_mlp);
@@ -185,12 +206,18 @@ p_mlp_calibrated = 1./(1 + exp(A_mlp.* F_test_mlp + B_mlp));
 
 %% Calibration IVM;
 if useUnbiasedVersion
-    F_holdout_IVM = rbf(X_test, S, g)*a_ivm;
+    F_holdout_IVM = rbf(X_holdout, S, g)*a_ivm;
 else
-    F_holdout_IVM = rbf(X_test, S, g)*a_ivm(1:end-1) + a_ivm(end);
+    F_holdout_IVM = rbf(X_holdout, S, g)*a_ivm(1:end-1) + a_ivm(end);
 end
-[A_ivm, B_ivm] = trainPlattScaling(F_holdout, y_holdout, iterMax, eps, lr);
-p_ivm_calibrated = 1./(1 + exp(A_ivm * F_test_IVM + B_ivm));
+[A_ivm, B_ivm] = trainPlattScaling(F_holdout_IVM, y_holdout, iterMax, eps, lr);
+p_ivm_calibrated = 1./(1 + exp(A_ivm*F_test_IVM + B_ivm));
+
+%% Calibration Bagged Trees;
+[y_hold_out_bagging, scores_holdout_bagging] = predict(B, X_holdout);
+F_holdout_bagging = scores_holdout_bagging(:, 2);
+[A_bagging, B_bagging] = trainPlattScaling(F_holdout_bagging,y_holdout,iterMax, eps,lr);
+p_bagging_calibrated = 1./(1 + exp(A_bagging*F_test_bagging + B_bagging));
 
 %% Reliability diagrams; 
 % plotReliability([p_rbf(:) p_lr_test(:) p_mlp(:) p_bagging(:)],...
@@ -198,8 +225,10 @@ p_ivm_calibrated = 1./(1 + exp(A_ivm * F_test_IVM + B_ivm));
 % 
 % plotReliability([p_rbf_calibrated(:) p_lr_calibrated(:) p_mlp_calibrated(:)],...
 %     y_test, num_bins, ["Fastron RBF Calibrated" "LogRegression Calibrated" "MLP Calibrated"]); 
-plotReliability2([p_rbf(:) p_rbf_calibrated(:) p_lr_test(:) p_lr_calibrated(:) p_mlp(:) p_mlp_calibrated(:) p_ivm(:) p_ivm_calibrated(:)], ...
-    y_test, num_bins, ["Fastron" "LogReg" "MLP" "IVM"]); 
+plotReliability2([p_rbf(:) p_rbf_calibrated(:) p_lr_test(:) ...
+    p_lr_calibrated(:) p_mlp(:) p_mlp_calibrated(:) p_ivm(:) ...
+    p_ivm_calibrated(:) p_bagging(:) p_bagging_calibrated], ...
+    y_test, num_bins, ["Fastron" "LogReg" "MLP" "IVM" "Bagged Trees"]); 
 
 %% Probability plots
 [X2,Y2] = meshgrid(linspace(x_min(1), x_max(1),100), linspace(x_min(2),x_max(2),100));
@@ -209,40 +238,40 @@ figure('NumberTitle', 'off', 'Name', 'P(Y=1|X)');
 img_rbf = zeros(size(X2)); % n x m; 
 K_rbf = rbf([X2(:) Y2(:)], X_train, g);
 img_rbf(:) = 1./(1 + exp(-K_rbf*a));
-subplot(4,2,1), imshow(flip(img_rbf,1));
+subplot(5,2,1), imshow(flip(img_rbf,1));
 title("Fastron RBF kernel");
 
 % Fastron RBF Calibrated
 img_rbf_calibrated = zeros(size(X2)); % n x m; 
 img_rbf_calibrated(:) = 1./(1 + exp(A_fastron.*K_rbf*a+ B_fastron));
-subplot(4,2,2), imshow(flip(img_rbf_calibrated,1));
+subplot(5,2,2), imshow(flip(img_rbf_calibrated,1));
 title("Fastron RBF Calibrated");
 
 % LR;
 img_lr = zeros(size(X2));
 y = ones(size(X2(:)));
 img_lr(:) = 1./(1 + exp(-(K_rbf*w_lr' + b_lr)));
-subplot(4,2,3), imshow(flip(img_lr,1));
+subplot(5,2,3), imshow(flip(img_lr,1));
 title("Logistic Regression");
 
 % LR Calibrated;
 img_lr_calibrated = zeros(size(X2));
 y = ones(size(X2(:)));
 img_lr_calibrated(:) = 1./(1 + exp(A_lr.*(K_rbf * w_lr' + b_lr) + B_lr));
-subplot(4,2,4), imshow(flip(img_lr_calibrated,1));
+subplot(5,2,4), imshow(flip(img_lr_calibrated,1));
 title("Logistic Regression Calibrated");
 
 % NN; 
 img_mlp = zeros(size(X2));
 F_mlp_test = feedforward([X2(:) Y2(:)], w_mlp, b_mlp);
 img_mlp(:) = 1./ (1 + exp(-F_mlp_test));
-subplot(4,2,5), imshow(flip(img_mlp,1));
+subplot(5,2,5), imshow(flip(img_mlp,1));
 title("Multi-layer Perceptron");
 
 % NN Calibrated;
 img_mlp_calibrated = zeros(size(X2));
 img_mlp_calibrated(:) = 1./ (1 + exp(A_mlp.*(F_mlp_test)+B_mlp));
-subplot(4,2,6), imshow(flip(img_mlp_calibrated,1));
+subplot(5,2,6), imshow(flip(img_mlp_calibrated,1));
 title("Multi-layer Perceptron Calibrated");
 
 % IVM;
@@ -254,29 +283,43 @@ else
     F_ivm = K_ivm*a_ivm(1:end-1) + a_ivm(end);
 end
 img_ivm(:) = 1./ (1 + exp(-F_ivm));
-subplot(4,2,7), imshow(flip(img_ivm,1));
+subplot(5,2,7), imshow(flip(img_ivm,1));
 title("IVM");
 
 % IVM Calibrated
 img_ivm_calibrated = zeros(size(X2));
 img_ivm_calibrated(:) = 1./ (1 + exp(A_ivm * F_ivm + B_ivm));
-subplot(4,2,8), imshow(flip(img_ivm_calibrated,1));
+subplot(5,2,8), imshow(flip(img_ivm_calibrated,1));
 title("IVM Calibrated");
+
+%% Bagging
+img_bagging = zeros(size(X2));
+[y_bagging_img, s_bagging_img] = predict(B, [X2(:) Y2(:)]);
+img_bagging(:) = s_bagging_img(:, 2);
+subplot(5,2,9), imshow(flip(img_bagging,1));
+title("Bagged Trees");
+
+img_bagging_calibrated = zeros(size(X2));
+img_bagging_calibrated(:)=1./(1+exp(A_bagging*s_bagging_img(:,2)+B_bagging));
+subplot(5,2, 10), imshow(flip(img_bagging_calibrated,1));
+title("Calibrated Bagged Trees");
 
 %% Bar graph for scores;
 scoreFuns = {@nll, @brierScore};
 names = ["Negative Log Loss", "Brier Score"];
 for i=1:size(scoreFuns,2)
     figure('NumberTitle', 'off');
-    score = zeros(4,2);
-    p = [p_rbf(:) p_rbf_calibrated(:) p_lr_test(:) p_lr_calibrated(:) p_mlp(:) p_mlp_calibrated(:) p_ivm(:) p_ivm_calibrated(:)];
+    score = zeros(5,2);
+    p = [p_rbf(:) p_rbf_calibrated(:) p_lr_test(:) p_lr_calibrated(:) ... 
+         p_mlp(:) p_mlp_calibrated(:) p_ivm(:) p_ivm_calibrated(:) ...
+         p_bagging(:) p_bagging_calibrated(:)];
     scoreFun = scoreFuns{i};
     for j=1:size(p,2)/2
         score(j,1) = scoreFun(p(:, 2*j-1),y_test); % uncalibrated;
         score(j,2) = scoreFun(p(:, 2*j),y_test); % calibrated;
     end
     h = bar(score);
-    set(gca,'xticklabel', ["Fastron" "LogReg" "MLP" "IVM"]); 
+    set(gca,'xticklabel', ["Fastron" "LogReg" "MLP" "IVM" "Bagging"]); 
     l = cell(1,2);
     l{1}='Uncalibrated'; l{2}='Calibrated';  
     legend(h,l);
@@ -285,7 +328,8 @@ end
 
 %% Table for precision, recall and confidence percentage
 results = zeros(size(X_test,1),5,4); 
-counts = [y_pred_fastron y_pred_lr_test y_pred_mlp y_pred_ivm y_pred_bagging_test ]; 
+counts = [y_pred_fastron y_pred_lr_test y_pred_mlp y_pred_ivm ...
+          y_pred_bagging_test]; 
 
 for i=1:size(results,2)
     results(:,i,1) = (counts(:,i) == 1) & (y_test == 1);
@@ -300,8 +344,8 @@ recall_p = sum(results(:,:,1),1)./(sum(results(:,:,1),1) + sum(results(:,:,4),1)
 recall_n = sum(results(:,:,3),1)./(sum(results(:,:,3),1) + sum(results(:,:,2),1));
 
 conf = sum(p > 0.8 | p < .2, 1)/size(y_test,1);
-conf_uncalibrated = [conf(:,1:2:7),0]; % TODO: Add Bagged Trees; 
-conf_calibrated = [conf(:,2:2:8),0];
+conf_uncalibrated = conf(:,1:2:9);
+conf_calibrated = conf(:,2:2:10);
 
 T = table(acc',tpr',recall_p',tnr',recall_n', conf_uncalibrated', conf_calibrated', ...
     'RowNames',["Fastron","LogReg","MLP","IVM","Bagged Trees"],...
@@ -320,6 +364,8 @@ TString = strrep(TString,'_','\_');
 
 % Get a fixed-width font.
 FixedWidth = get(0,'FixedWidthFontName');
+
+fig = figure();
 % Output the table using the annotation command.
-annotation(gcf,'Textbox','String',TString,'Interpreter','Tex',...
+annotation(fig,'Textbox','String',TString,'Interpreter','Tex',...
     'FontName',FixedWidth,'Units','Normalized','Position',[0 0 1 1]);
