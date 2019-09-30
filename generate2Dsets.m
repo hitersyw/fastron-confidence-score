@@ -28,7 +28,7 @@ function [] = generate2Dsets(n, root_dir, plot_figure)
     
     ob = 3*[-0.1 -0.1; 0.1 -0.1; 0.1 0.1; -0.1 0.1]; % obs base coordinates;
 
-    offset = sqrt(2) * rand(n, 2); % The maximum dist to origin is 2;
+    offset = sqrt(2)*max(0.3, rand(n, 2)); % The maximum dist to origin is 2;
 
     for k = 1:n
         dir = sprintf("CSpace%d", k);

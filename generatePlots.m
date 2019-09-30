@@ -2,7 +2,7 @@ clear; close all;
 
 plot_fig = false;
 rng(0);
-n = 2;
+n = 10;
 
 mkdir ./data testset;
 generate2Dsets(n, "./data/testset", plot_fig);

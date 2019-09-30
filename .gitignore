@@ -3,5 +3,4 @@
 *.m~
 Results/
 DiscriminativeModels.ipynb
-data/
 *.json

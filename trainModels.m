@@ -1,7 +1,10 @@
-function [] = trainModels(dataset_path, calibration, plot_testset, ...
+function [acc, tpr, fpr, conf_region, scores] = ...
+    trainModels(dataset_path, calibration, plot_testset, ...
     plot_reliability, plot_decision_boundary, plot_metrics)
     % Hyper-parameters for Fastron learning;
-    iterMax = 5000;
+    rng(0);
+    
+    iterMax = 20000;
     g = 1.;
     beta = 1.;
     Smax = 2000;
@@ -259,21 +262,23 @@ function [] = trainModels(dataset_path, calibration, plot_testset, ...
         title("Calibrated Bagged Trees");
     end
     
-    if plot_metrics
-        % Bar graph for scores;
-        scoreFuns = {@nll, @brierScore};
-        names = ["Negative Log Loss", "Brier Score"];
-        for i=1:size(scoreFuns,2)
-            figure('NumberTitle', 'off');
-            score = zeros(5,2);
-            p = [p_rbf(:) p_rbf_calibrated(:) p_lr_test(:) p_lr_calibrated(:) ... 
-                 p_mlp(:) p_mlp_calibrated(:) p_ivm(:) p_ivm_calibrated(:) ...
-                 p_bagging(:) p_bagging_calibrated(:)];
-            scoreFun = scoreFuns{i};
-            for j=1:size(p,2)/2
-                score(j,1) = scoreFun(p(:, 2*j-1),y_test); % uncalibrated;
-                score(j,2) = scoreFun(p(:, 2*j),y_test); % calibrated;
-            end
+    % Bar graph for scores;
+    scoreFuns = {@nll, @brierScore};
+    scores = cell(2);
+    names = ["Negative Log Loss", "Brier Score"];
+    for i=1:size(scoreFuns,2)
+        figure('NumberTitle', 'off');
+        score = zeros(5,2);
+        p = [p_rbf(:) p_rbf_calibrated(:) p_lr_test(:) p_lr_calibrated(:) ... 
+             p_mlp(:) p_mlp_calibrated(:) p_ivm(:) p_ivm_calibrated(:) ...
+             p_bagging(:) p_bagging_calibrated(:)];
+        scoreFun = scoreFuns{i};
+        for j=1:size(p,2)/2
+            score(j,1) = scoreFun(p(:, 2*j-1),y_test); % uncalibrated;
+            score(j,2) = scoreFun(p(:, 2*j),y_test); % calibrated;
+        end 
+        scores{i} = score(:, calibration + 1)';
+        if plot_metrics
             h = bar(score);
             set(gca,'xticklabel', ["Fastron" "LogReg" "MLP" "IVM" "Bagging"]); 
             l = cell(1,2);
@@ -281,31 +286,42 @@ function [] = trainModels(dataset_path, calibration, plot_testset, ...
             legend(h,l);
             title(names{i})
         end
+    end
         
-        % Table for precision, recall and confidence percentage
-        results = zeros(size(X_test,1),5,4); 
-        counts = [y_pred_fastron y_pred_lr_test y_pred_mlp y_pred_ivm ...
-                  y_pred_bagging_test]; 
+    % Table for precision, recall and confidence percentage
+    results = zeros(size(X_test,1),5,4); 
+    counts = [y_pred_fastron y_pred_lr_test y_pred_mlp y_pred_ivm ...
+              y_pred_bagging_test]; 
 
-        for i=1:size(results,2)
-            results(:,i,1) = (counts(:,i) == 1) & (y_test == 1);
-            results(:,i,2) = (counts(:,i) == 1) & (y_test ~= 1);
-            results(:,i,3) = (counts(:,i) ~= 1) & (y_test ~= 1);
-            results(:,i,4) = (counts(:,i) ~= 1) & (y_test == 1);
-        end
-        acc = sum(results(:,:,1) + results(:,:,3), 1)/size(y_test, 1);
-        tpr = sum(results(:,:,1),1)./(sum(results(:,:,1),1) + sum(results(:,:,2),1));
-        tnr = sum(results(:,:,3),1)./(sum(results(:,:,3),1) + sum(results(:,:,4),1));
-        recall_p = sum(results(:,:,1),1)./(sum(results(:,:,1),1) + sum(results(:,:,4),1));
-        recall_n = sum(results(:,:,3),1)./(sum(results(:,:,3),1) + sum(results(:,:,2),1));
+    for i=1:size(results,2)
+        results(:,i,1) = (counts(:,i) == 1) & (y_test == 1); % TP
+        results(:,i,2) = (counts(:,i) == 1) & (y_test ~= 1); % FP
+        results(:,i,3) = (counts(:,i) ~= 1) & (y_test ~= 1); % TN
+        results(:,i,4) = (counts(:,i) ~= 1) & (y_test == 1); % FN
+    end
+    
+    acc = sum(results(:,:,1) + results(:,:,3), 1)/size(y_test, 1);
+    tpr = sum(results(:,:,1),1)./(sum(results(:,:,1),1) + sum(results(:,:,4),1));
+    tnr = sum(results(:,:,3),1)./(sum(results(:,:,3),1) + sum(results(:,:,2),1));
+    fpr = 1 - tnr;
+    fnr = 1 - tpr;
+    recall_p = sum(results(:,:,1),1)./(sum(results(:,:,1),1) + sum(results(:,:,4),1));
+    recall_n = sum(results(:,:,3),1)./(sum(results(:,:,3),1) + sum(results(:,:,2),1));
 
-        conf = sum(p > 0.8 | p < .2, 1)/size(y_test,1);
-        conf_uncalibrated = conf(:,1:2:9);
-        conf_calibrated = conf(:,2:2:10);
+    conf = sum(p > 0.8 | p < .2, 1)/size(y_test,1);
+    conf_uncalibrated = conf(:,1:2:9);
+    conf_calibrated = conf(:,2:2:10);
+    
+    if calibration
+        conf_region = conf_uncalibrated;
+    else
+        conf_region = conf_calibrated;
+    end
 
-        T = table(acc',tpr',recall_p',tnr',recall_n', conf_uncalibrated', conf_calibrated', ...
+    if plot_metrics
+        T = table(acc',tpr',fpr', conf_uncalibrated', conf_calibrated', ...
             'RowNames',["Fastron","LogReg","MLP","IVM","Bagged Trees"],...
-            'VariableNames',{'accuracy', 'tpr','recall_pos','tnr', 'recall_neg', ...
+            'VariableNames',{'accuracy', 'tpr','fpr', ...
             'high_confidence_uncalibrated', 'high_confidence_calibrated'
             });
 
