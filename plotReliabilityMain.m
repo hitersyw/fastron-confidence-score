@@ -40,15 +40,14 @@ test_file = sprintf(test_file_spec, dataset);
 %% Plot test set;
 figure('NumberTitle', 'off');
 subplot(2,3,1);
-x1 = X_test(y_test == 1, :);
-x2 = X_test(y_test == -1, :);
-
+x1 = X_test(y_test == 1, :); % 1 is collision-free;
+x2 = X_test(y_test == -1, :); % -1 is in-collision;
 scatter(x1(:, 1), x1(:, 2), 8, 'r', 'filled');
 hold on;
 scatter(x2(:, 1), x2(:, 2), 8, 'b', 'filled');
 title("Original");
 
-%% Fastron learning with RBF; 
+%% Fastron with RBF; 
 [a, F, K, iter]=trainFastron(X_train, y_train, @rbf, iterMax, Smax, beta, g);
 K_test_rbf = rbf(X_test, X_train, g); % n x m; 
 F_test_rbf = K_test_rbf*a;
@@ -67,7 +66,7 @@ title(sprintf(title_spec, "Fastron RBF", sum(sign(F_test_rbf)==y_test)/size(y_te
 % results(1,2,:) = (sign(F_test_rbf) == 1 && y_test ~= 1);
 % results(1,3,:) = (sign(F_test_rbf) ~= 1 && y_test ~= 1);
 % results(1,4,:) = (sign(F_test_rbf) ~= 1 && y_test == 1);
-%% Load output from LR
+%% Kernel Logistic Regression
 log_reg_file_spec = "./sgd_%s.json";
 log_reg_file=sprintf(log_reg_file_spec,dataset);
 fid = fopen(log_reg_file);
@@ -94,7 +93,7 @@ hold on;
 scatter(x_neg(:, 1), x_neg(:,2), 8, 'b', 'filled');
 title(sprintf(title_spec, "Log Regression", sum(y_pred_lr_test * 2-1==y_test)/size(y_test,1)));
 
-%% Load output from NN
+%% MLP
 mlp_file_spec = "./mlp_%s.json";
 mlp_file = sprintf(mlp_file_spec, dataset);
 fid = fopen(mlp_file);
@@ -116,29 +115,8 @@ scatter(x_pos(:, 1), x_pos(:,2), 8, 'r','filled');
 hold on;
 scatter(x_neg(:, 1), x_neg(:,2), 8, 'b','filled');
 title(sprintf(title_spec, "MLP", sum(y_pred_mlp * 2-1==y_test)/size(y_test,1)));
-%% Load output from bagged trees
-% bagging_reg_file_spec = "./bagged_trees_%s.json";
-% bagging_reg_file=sprintf(bagging_reg_file_spec,dataset);
-% fid = fopen(bagging_reg_file);
-% raw = fread(fid); 
-% str = char(raw'); 
-% fclose(fid); 
-% values = jsondecode(str);
-% 
-% bagging_test_output = values.test_output;
-% y_pred_bagging_test = bagging_test_output(:,1);
-% p_bagging = bagging_test_output(:, 2);
-% 
-% x_pos = X_test(y_pred_bagging_test == 1, :);
-% x_neg = X_test(y_pred_bagging_test == 0, :);
-% 
-% subplot(2,3,5);
-% scatter(x_pos(:, 1), x_pos(:,2), 8, 'r', 'filled');
-% hold on;
-% scatter(x_neg(:, 1), x_neg(:,2), 8, 'b', 'filled');
-% title(sprintf(title_spec, "Bagged Trees", sum(y_pred_bagging_test * 2-1==y_test)/size(y_test,1)));
 
-%% Fit bagged trees to dataset
+%% BaggedTrees
 B = TreeBagger(10, X_train,y_train, "InBagFraction", 1.0, ...
                'NumPredictorsToSample', 'all');
 [y_pred_bagging_test, scores_bagging_test] = predict(B, X_test);
@@ -155,7 +133,7 @@ hold on;
 scatter(x_neg(:, 1), x_neg(:,2), 8, 'b', 'filled');
 title(sprintf(title_spec, "Bagged Trees", sum(y_pred_bagging_test==y_test)/size(y_test,1)));
 
-%% IVM learning
+%% IVM
 lambda = 5;
 useUnbiasedVersion = false;
 K = rbf(X_train, X_train, g);
@@ -292,7 +270,7 @@ img_ivm_calibrated(:) = 1./ (1 + exp(A_ivm * F_ivm + B_ivm));
 subplot(5,2,8), imshow(flip(img_ivm_calibrated,1));
 title("IVM Calibrated");
 
-%% Bagging
+% Bagging
 img_bagging = zeros(size(X2));
 [y_bagging_img, s_bagging_img] = predict(B, [X2(:) Y2(:)]);
 img_bagging(:) = s_bagging_img(:, 2);
