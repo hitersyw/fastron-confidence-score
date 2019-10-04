@@ -34,7 +34,7 @@ for k = 1:N
         W = p.*(1-p);
         
         z = (F + (1./W).*(y-p));
-        a_temp{l} = pinv(K_a'*(W.*K_a) + lambda.* K_q)* K_a'*(W.*z);
+        a_temp{l} = (K_a'*(W.*K_a) + lambda.* K_q)\K_a'*(W.*z);
         
         H(l) = -y'*K_a*a_temp{l} + ones(1,N)*log(1+exp(K_a*a_temp{l})) + lambda/2*a_temp{l}'*K_q*a_temp{l};
     end

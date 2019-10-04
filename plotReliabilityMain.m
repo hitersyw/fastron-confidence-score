@@ -61,11 +61,6 @@ scatter(x_pos(:, 1), x_pos(:,2), 8, 'r', 'filled');
 hold on;
 scatter(x_neg(:, 1), x_neg(:,2), 8, 'b', 'filled');
 title(sprintf(title_spec, "Fastron RBF", sum(sign(F_test_rbf)==y_test)/size(y_test,1)));
-
-% results(1,1,:) = (sign(F_test_rbf) == 1 && y_test == 1);
-% results(1,2,:) = (sign(F_test_rbf) == 1 && y_test ~= 1);
-% results(1,3,:) = (sign(F_test_rbf) ~= 1 && y_test ~= 1);
-% results(1,4,:) = (sign(F_test_rbf) ~= 1 && y_test == 1);
 %% Kernel Logistic Regression
 log_reg_file_spec = "./sgd_%s.json";
 log_reg_file=sprintf(log_reg_file_spec,dataset);
