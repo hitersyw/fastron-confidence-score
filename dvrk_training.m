@@ -1,4 +1,5 @@
 clear; close all;
+profile on;
 rng(0);
 
 %% Hyperparameters
@@ -10,7 +11,7 @@ beta = 1.;
 Smax = 2000;
 
 %% Load dataset
-dir = "/home/nikhildas/workspace/fastron_experimental/fastron_vrep/log";
+dir = "/home/jamesdi1993/workspace/fastron_experimental/fastron_vrep/log";
 sample_file_spec = dir + "/joint_angle_sample_X_n%d_arm%d.csv";
 collision_label_spec = dir + "/collision_state_y_n%d_arm%d.csv";
 arm = 1;

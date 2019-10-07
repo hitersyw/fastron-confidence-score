@@ -17,6 +17,7 @@ if nargin < 4, lambda = 1; end
 
 Hk = inf(N,1);
 for k = 1:N
+    tic();
     a_temp = cell(nnz(R_mark),1);
     H = zeros(N,1);
     
@@ -28,13 +29,12 @@ for k = 1:N
         K_q = K(idx, idx);
         
         F = K_a*a(idx) + a(end);
-        
         p = 1./(1 + exp(-F));
         p = clip(p, 0.001);
         W = p.*(1-p);
         
         z = (F + (1./W).*(y-p));
-        a_temp{l} = (K_a'*(W.*K_a) + lambda.* K_q)\K_a'*(W.*z);
+        a_temp{l} = (K_a'*(W.*K_a) + lambda.*K_q)\K_a'*(W.*z);
         
         H(l) = -y'*K_a*a_temp{l} + ones(1,N)*log(1+exp(K_a*a_temp{l})) + lambda/2*a_temp{l}'*K_q*a_temp{l};
     end
@@ -49,7 +49,7 @@ for k = 1:N
     % calculate bias term
 %     a(end) = mean(y([find(S_mark); xls]) - K([find(S_mark); xls],:)*a(1:N));
 %     a(end) = -mean(K([find(S_mark); xls],:)*a(1:N));
-    a(end) = -0.5 * (mean(K(y~=1,:)*a(1:N)) + mean(K(y==1,:)*a(1:N)));
+    a(end) = -0.5 * (mean(K(y~=0,:)*a(1:N)) + mean(K(y==0,:)*a(1:N)));
 %     a(end) = -mean(K*a(1:N));
     a([find(S_mark); xls]) = a_temp{xls};
     
@@ -59,6 +59,7 @@ for k = 1:N
     if k > 1 && abs((Hk(k) - Hk(k-1))/Hk(k)) < 0.001 % termination condition
         break;
     end
+    toc();
 end
 display(sprintf('Iterations: %d', k));
 
