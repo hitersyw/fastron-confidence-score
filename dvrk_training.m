@@ -12,7 +12,7 @@ Smax = 2000;
 input_type = "Binary";
 
 %% Load dataset
-dir = "/home/jamesdi1993/workspace/fastron_experimental/fastron_vrep/log";
+dir = "./data";
 sample_file_spec = dir + "/joint_angle_sample_X_n%d_arm%d.csv";
 collision_label_spec = dir + "/collision_state_y_n%d_arm%d.csv";
 arm = 1;

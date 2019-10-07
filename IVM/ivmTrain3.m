@@ -20,23 +20,26 @@ for k = 1:N
     tic();
     a_temp = cell(nnz(R_mark),1);
     H = zeros(N,1);
+   
+    % Compute it for existing support points;
+    idx = find(S_mark); 
+    K_a = K(:, idx);
+    K_q = K(idx, idx);
+
+    F = K_a*a(idx) + a(end);
+    p = 1./(1 + exp(-F));
+    p = clip(p, 0.001);
+    W = p.*(1-p);
+    z = (F + (1./W).*(y-p));
     
     % calculate all H costs for each point in R
     for l = find(R_mark)'
-        idx = [find(S_mark); l];
         
-        K_a = K(:, idx);
-        K_q = K(idx, idx);
+        K_a_l = [K_a, K(:, l)];
+        K_q_l = [K_q, K(idx, l); K(l, idx), K(l, l)]; 
+        a_temp{l} = (K_a_l'*(W.*K_a_l) + lambda.*K_q_l)\K_a_l'*(W.*z);
         
-        F = K_a*a(idx) + a(end);
-        p = 1./(1 + exp(-F));
-        p = clip(p, 0.001);
-        W = p.*(1-p);
-        
-        z = (F + (1./W).*(y-p));
-        a_temp{l} = (K_a'*(W.*K_a) + lambda.*K_q)\K_a'*(W.*z);
-        
-        H(l) = -y'*K_a*a_temp{l} + ones(1,N)*log(1+exp(K_a*a_temp{l})) + lambda/2*a_temp{l}'*K_q*a_temp{l};
+        H(l) = -y'*K_a_l*a_temp{l} + ones(1,N)*log(1+exp(K_a_l*a_temp{l})) + lambda/2*a_temp{l}'*K_q_l*a_temp{l};
     end
     
     % B3

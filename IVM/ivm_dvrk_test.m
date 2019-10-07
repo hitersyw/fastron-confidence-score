@@ -2,7 +2,7 @@ clear; close all;
 rng(0)
 
 %% Load dataset
-dir = "/home/jamesdi1993/workspace/fastron_experimental/fastron_vrep/log";
+dir = "./data";
 sample_file_spec = dir + "/joint_angle_sample_X_n%d_arm%d.csv";
 collision_label_spec = dir + "/collision_state_y_n%d_arm%d.csv";
 arm = 1;
@@ -39,7 +39,7 @@ else
     [a_ivm, S, idx] = ivmTrain2(X_train, y_train, K, lambda);
 end
 profile off;
-profsave(profile('info'), './log');
+profsave(profile('info'), './log/run2');
 
 if useUnbiasedVersion
     F_test_IVM = rbf(X_test, S, g)*a_ivm;
