@@ -33,20 +33,22 @@ for k = 1:N
     p = clip(p, 0.001);
     W = p.*(1-p);
     z = (F + (1./W).*(y-p));
+    KW = K_a'*diag(W);
     % calculate all H costs for each point in R
     for l = find(R_mark)'
-        K_a_l = [K_a, K(:, l)];
+        idx_l = [idx; l];
+        K_a_l = K(:, idx_l);
         K_q_l = [K_q, K(idx, l); K(l, idx), K(l, l)]; 
         if sum(S_mark) == 0
-            inv_tmp{l} = lambda.*K(l,l)\eye(1);
+            inv_tmp{l} = (K_a_l'*(W.*K_a_l) + lambda.*K_q_l)\eye(K_q_l);
             a_temp{l} = inv_tmp{l}.*K_a_l'*(W.*z);
         else
-            b = K_a'*W*K(:,l)+lambda.*K(idx,l);
-            d = K(:,l)'*W*K(:,l)+lambda.*K(l,l);
+            b = KW*K(:,l)+lambda.*K(idx,l);
+            d = K(:,l)'*(W.*K(:,l))+lambda.*K(l,l);
             s = (d-b'*inv_p*b)\eye(1);
             block_inv = [inv_p + s.*inv_p*(b*b')*inv_p, -s.*inv_p*b;
                          -s.*b'*inv_p, s];
-            a_temp{l} = inv_tmp* K_a_l'*(W.*z);
+            a_temp{l} = block_inv * K_a_l'*(W.*z);
             inv_tmp{l} = block_inv;
         end
         H(l) = -y'*K_a_l*a_temp{l} + ones(1,N)*log(1+exp(K_a_l*a_temp{l})) + lambda/2*a_temp{l}'*K_q_l*a_temp{l};
@@ -58,7 +60,7 @@ for k = 1:N
     xls = l(xls);
     
     Hk(k) = H(xls);
-    inv_p = inv_tmp(xls);
+    inv_p = inv_tmp{xls};
     % calculate bias term
 %     a(end) = mean(y([find(S_mark); xls]) - K([find(S_mark); xls],:)*a(1:N));
 %     a(end) = -mean(K([find(S_mark); xls],:)*a(1:N));

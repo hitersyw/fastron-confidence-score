@@ -39,7 +39,7 @@ else
     [a_ivm, S, idx] = ivmTrain3(X_train, y_train, K, lambda);
 end
 profile off;
-profsave(profile('info'), './log/43279');
+profsave(profile('info'), './log/42035');
 
 if useUnbiasedVersion
     F_test_IVM = rbf(X_test, S, g)*a_ivm;
