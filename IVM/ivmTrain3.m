@@ -45,7 +45,7 @@ for k = 1:N
         else
             b = KW*K(:,l)+lambda.*K(idx,l);
             d = K(:,l)'*(W.*K(:,l))+lambda.*K(l,l);
-            s = (d-b'*inv_p*b)\eye(1);
+            s = 1./(d-b'*inv_p*b);
             block_inv = [inv_p + s.*inv_p*(b*b')*inv_p, -s.*inv_p*b;
                          -s.*b'*inv_p, s];
             a_temp{l} = block_inv * K_a_l'*(W.*z);
@@ -64,7 +64,11 @@ for k = 1:N
     % calculate bias term
 %     a(end) = mean(y([find(S_mark); xls]) - K([find(S_mark); xls],:)*a(1:N));
 %     a(end) = -mean(K([find(S_mark); xls],:)*a(1:N));
-    a(end) = -0.5 * (mean(K(y~=0,:)*a(1:N)) + mean(K(y==0,:)*a(1:N)));
+    mean_pos = mean(K(y~=0,:)*a(1:N));
+    mean_neg = mean(K(y==0,:)*a(1:N));
+    mean_pos(isnan(mean_pos))=0;
+    mean_neg(isnan(mean_neg))=0;
+    a(end) = -0.5 * (mean_pos + mean_neg);
 %     a(end) = -mean(K*a(1:N));
     a([find(S_mark); xls]) = a_temp{xls};
     

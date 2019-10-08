@@ -49,7 +49,11 @@ for k = 1:N
     % calculate bias term
 %     a(end) = mean(y([find(S_mark); xls]) - K([find(S_mark); xls],:)*a(1:N));
 %     a(end) = -mean(K([find(S_mark); xls],:)*a(1:N));
-    a(end) = -0.5 * (mean(K(y~=0,:)*a(1:N)) + mean(K(y==0,:)*a(1:N)));
+    mean_pos = mean(K(y~=0,:)*a(1:N));
+    mean_neg = mean(K(y==0,:)*a(1:N));
+    mean_pos(isnan(mean_pos)) = 0;
+    mean_neg(isnan(mean_neg)) = 0;
+    a(end) = -0.5 * (mean_pos + mean_neg);
 %     a(end) = -mean(K*a(1:N));
     a([find(S_mark); xls]) = a_temp{xls};
     
