@@ -36,10 +36,10 @@ K = rbf(X_train, X_train, g);
 if useUnbiasedVersion
     [a_ivm, S, idx] = ivmTrain(X_train, y_train, K, lambda);
 else
-    [a_ivm, S, idx] = ivmTrain2(X_train, y_train, K, lambda);
+    [a_ivm, S, idx] = ivmTrain3(X_train, y_train, K, lambda);
 end
 profile off;
-profsave(profile('info'), './log/run2');
+profsave(profile('info'), './log/43279');
 
 if useUnbiasedVersion
     F_test_IVM = rbf(X_test, S, g)*a_ivm;
