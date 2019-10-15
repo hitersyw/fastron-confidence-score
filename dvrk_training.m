@@ -9,19 +9,20 @@ g = 20.;
 iterMax = 10000;
 beta = 1.;
 Smax = 2000;
+input_type = "Binary";
 
 %% Load dataset
 dir = "/home/jamesdi1993/workspace/fastron_experimental/fastron_vrep/log";
 sample_file_spec = dir + "/joint_angle_sample_X_n%d_arm%d.csv";
 collision_label_spec = dir + "/collision_state_y_n%d_arm%d.csv";
 arm = 1;
-n = 10000;
+n = 2000;
 
 sample_file = sprintf(sample_file_spec, n, arm);
 collision_label_file = sprintf(collision_label_spec, n, arm);
 X = dlmread(sample_file,',',0,0);
-y = dlmread(collision_label_file,',',0,0);
-
+y = dlmread(collision_label_file,',',0,0); % 1 is incollision, -1 is collision free;
+% y = (y+1)/2;
 training_p = 0.8;
 validation_p = 0.1;
 test_p = 0.1;
@@ -74,28 +75,30 @@ t_fastron_test = toc();
 % scatter(x_neg(:, 1), x_neg(:,2), 8, 'b', 'filled');
 % title(sprintf(title_spec, "Log Regression", sum(y_pred_lr_test * 2-1==y_test)/size(y_test,1)));
 
+%% Kernel Log Regression;
+tic();
+[klr,FitInfo] = fitckernel(X_train,y_train, 'Learner', 'logistic');
+t_klr_train = toc();
+
+tic()
+[y_pred_klr, scores_klr] = predict(klr, X_test);
+t_klr_test = toc();
+
+p_klr = scores_klr(:, 2);
+
 %% MLP
-% mlp_file_spec = "./mlp_%s.json";
-% mlp_file = sprintf(mlp_file_spec, dataset);
-% fid = fopen(mlp_file);
-% raw = fread(fid); 
-% str = char(raw'); 
-% fclose(fid); 
-% values = jsondecode(str);
-% w_mlp = values.coef;
-% b_mlp = values.intercept;
-% data = values.test_output;
-% y_pred_mlp = data(:,1);
-% p_mlp = data(:, 3);
-% 
-% x_pos = X_test(y_pred_mlp == 1, :);
-% x_neg = X_test(y_pred_mlp == 0, :);
-% 
-% subplot(2,3,4);
-% scatter(x_pos(:, 1), x_pos(:,2), 8, 'r','filled');
-% hold on;
-% scatter(x_neg(:, 1), x_neg(:,2), 8, 'b','filled');
-% title(sprintf(title_spec, "MLP", sum(y_pred_mlp * 2-1==y_test)/size(y_test,1)));
+tic()
+h = [256, 256]; % Two 256 layer MLP; 
+lambda = 0.0001; %  regularization term;
+y_train_mlp = (y_train + 3) / 2; % convert (-1,1) into (1,2);
+[model, llh] = mlpClass(X_train',y_train_mlp',h,lambda); % default is using sigmoid function;
+t_mlp_train = toc();
+
+tic();
+[y_pred_mlp, p_mlp] = mlpClassPred(model,X_test');
+y_pred_mlp = (y_pred_mlp * 2 - 3)'; % convert back into (-1, 1);
+p_mlp = p_mlp(2, :)'; % get the probability of inCollision;
+t_mlp_test = toc();
 
 %% BaggedTrees
 tic();
@@ -116,10 +119,11 @@ useUnbiasedVersion = false;
 
 tic();
 K = rbf(X_train, X_train, g);
+y_train_ivm = (y_train + 1) / 2; % IVM expects input to be 0, 1
 if useUnbiasedVersion
-    [a_ivm, S, idx] = ivmTrain(X_train, y_train, K, lambda);
+    [a_ivm, S, idx] = ivmTrain(X_train, y_train_ivm, K, lambda);
 else
-    [a_ivm, S, idx] = ivmTrain2(X_train, y_train, K, lambda);
+    [a_ivm, S, idx] = ivmTrain2(X_train, y_train_ivm, K, lambda);
 end
 t_ivm_train = toc();
 fprintf("Finsihed training for IVM. Elasped time: %s\n", t_ivm_train);
@@ -140,11 +144,12 @@ y_pred_ivm = sign(F_test_IVM);
 %% Bar graph for scores;
 scoreFuns = {@nll, @brierScore};
 names = ["Negative Log Loss", "Brier Score"];
-score = zeros(3,2);
+score = zeros(5,2);
 spec = "%2f";
 
-figure('NumberTitle', 'off');
-p = [p_rbf(:) p_ivm(:) p_bagging(:)];
+figure_title = "%s input for %d samples";
+figure('NumberTitle', 'off', 'Name', sprintf(figure_title, input_type, size(X_train,1)));
+p = [p_rbf(:) p_ivm(:) p_bagging(:) p_mlp(:) p_klr(:)];
 for i=1:size(p,2)
     for j=1:size(scoreFuns,2)
         scoreFun = scoreFuns{j};
@@ -154,26 +159,17 @@ end
 
 fprintf(spec, score);
 
+subplot(3,1,1);
 h1 = bar(score);
-set(gca,'xticklabel', ["Fastron" "IVM" "Bagging"]); 
+set(gca,'xticklabel', ["Fastron" "IVM" "Bagging" "MLP" "KLR"]); 
 l1 = cell(1,2);
 l1{1}='Negative Log Loss'; l1{2}='Brier Score';  
 legend(h1,l1);
+title("Confidence Loss");
 
-%% Bar graph for training and testing time;
-t = [t_fastron_train, t_fastron_test;
-    t_ivm_train, t_ivm_test;
-    t_bagging_train, t_bagging_test];
-figure('NumberTitle', 'off');
-h2 = bar(t);
-set(gca,'xticklabel', ["Fastron" "IVM" "Bagging"]); 
-l2 = cell(1,2);
-l2{1}='Training Time'; l2{2}='Execution Time';
-legend(h2,l2);
-
-%% Table for precision, recall and confidence percentage
-results = zeros(size(X_test,1),3,4); 
-counts = [y_pred_fastron y_pred_ivm y_pred_bagging_test]; 
+%% Matrix for calculating accuracy
+results = zeros(size(X_test,1),5,4); 
+counts = [y_pred_fastron y_pred_ivm y_pred_bagging_test y_pred_mlp y_pred_klr]; 
 
 for i=1:size(results,2)
     results(:,i,1) = (counts(:,i) == 1) & (y_test == 1);
@@ -191,10 +187,55 @@ conf = sum(p > 0.8 | p < .2, 1)/size(y_test,1);
 % conf_uncalibrated = conf(:,1:2:9);
 % conf_calibrated = conf(:,2:2:10);
 
+%% Bar graph for confidence region
+% figure('NumberTitle', 'off');
+subplot(3,1,2);
+h2 = bar(conf);
+set(gca,'xticklabel', ["Fastron" "IVM" "Bagging" "MLP" "KLR"]); 
+ylabel('Percentage');
+title("High Confidence Region >.8 & <.2");
+
+%% Bar graph for accuracy, precision, recall
+% figure('NumberTitle', 'off');
+subplot(3,1,3);
+h3 = bar([acc', tpr', recall_p']);
+set(gca,'xticklabel', ["Fastron" "IVM" "Bagging" "MLP" "KLR"]);
+l3 = cell(1,3);
+l3{1}='Accuracy'; l3{2}='Precision'; l3{3}='Recall';
+ylabel('Percentage');
+legend(h3, l3);
+title("Accuracy, precision, recall");
+
+%% Bar graph for training and testing time;
+figure('NumberTitle', 'off', 'Name', sprintf(figure_title, input_type, size(X_train,1)));
+t1 = [t_fastron_train, t_ivm_train, t_bagging_train, t_mlp_train t_klr_train];
+% figure('NumberTitle', 'off');
+subplot(2,1,1);
+h4 = bar(t1);
+set(gca,'xticklabel', ["Fastron" "IVM" "Bagging" "MLP" "KLR"]); 
+ylabel("Seconds");
+title("Training time");
+
+t2 = [t_fastron_test, t_ivm_test, t_bagging_test, t_mlp_test, t_klr_test] * 1000;
+subplot(2,1,2);
+h5 = bar(t2);
+set(gca,'xticklabel', ["Fastron" "IVM" "Bagging" "MLP" "KLR"]); 
+ylabel("Microseconds");
+title("Execution time");
+
+%% Table for accuracy, precision, recall;
+import mlreportgen.report.*
+import mlreportgen.dom.*
+
 T = table(round(acc',2),round(tpr',2),round(recall_p',2),round(tnr', 2),...
-    round(recall_n',2), 'RowNames',["Fastron","IVM","Bagged Trees"],...
+    round(recall_n',2), 'RowNames', ...
+    ["Fastron","IVM","Bagged Trees","MLP", "KLR"],...
     'VariableNames',{'accuracy', 'tpr','recall_pos','tnr','recall_neg'
     });
+
+t1 = BaseTable(T);
+t1.Title = 'Timing results';
+
 
 % uitable('Data',T{:,:},'ColumnName', T.Properties.VariableNames,...
 %     'RowName',T.Properties.RowNames);
@@ -208,16 +249,11 @@ T = table(round(acc',2),round(tpr',2),round(recall_p',2),round(tnr', 2),...
 % % Get a fixed-width font.
 % FixedWidth = get(0,'FixedWidthFontName');
 
-import mlreportgen.report.*
-import mlreportgen.dom.*
-
+%% Generate report;
 rpt = Report('Confidence model comparisons');
 chapter = Chapter();
 chapter.Title = 'Timing and accuracy results';
 add(rpt,chapter);
-
-t1 = BaseTable(T);
-t1.Title = 'Timing results';
 add(rpt,t1);
 
 rptview(rpt);
