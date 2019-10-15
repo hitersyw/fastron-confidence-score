@@ -19,10 +19,12 @@ Hk = inf(N,1);
 for k = 1:N
     tic();
     a_temp = cell(nnz(R_mark),1);
-    H = zeros(N,1);
+    H = zeros(nnz(R_mark),1);
     
+    i = 0; % keep track of the indices in H;
     % calculate all H costs for each point in R
     for l = find(R_mark)'
+        i = i + 1;
         idx = [find(S_mark); l];
         
         K_a = K(:, idx);
@@ -34,17 +36,16 @@ for k = 1:N
         W = p.*(1-p);
         
         z = (F + (1./W).*(y-p));
-        a_temp{l} = (K_a'*(W.*K_a) + lambda.*K_q)\K_a'*(W.*z);
+        a_temp{i} = (K_a'*(W.*K_a) + lambda.*K_q)\K_a'*(W.*z);
         
-        H(l) = -y'*K_a*a_temp{l} + ones(1,N)*log(1+exp(K_a*a_temp{l})) + lambda/2*a_temp{l}'*K_q*a_temp{l};
+        H(i) = -y'*K_a*a_temp{i} + ones(1,N)*log(1+exp(K_a*a_temp{i})) + lambda/2*a_temp{i}'*K_q*a_temp{i};
     end
     
     % B3
     l = find(R_mark);
-    [~, xls] = min(H(l));
-    xls = l(xls);
-    
+    [~, xls] = min(H);
     Hk(k) = H(xls);
+    idx = l(xls);
     
     % calculate bias term
 %     a(end) = mean(y([find(S_mark); xls]) - K([find(S_mark); xls],:)*a(1:N));
@@ -55,10 +56,10 @@ for k = 1:N
     mean_neg(isnan(mean_neg)) = 0;
     a(end) = -0.5 * (mean_pos + mean_neg);
 %     a(end) = -mean(K*a(1:N));
-    a([find(S_mark); xls]) = a_temp{xls};
+    a([find(S_mark); idx]) = a_temp{xls};
     
-    S_mark(xls) = true;
-    R_mark(xls) = false;
+    S_mark(idx) = true;
+    R_mark(idx) = false;
     
     if k > 1 && abs((Hk(k) - Hk(k-1))/Hk(k)) < 0.001 % termination condition
         break;

@@ -1,4 +1,4 @@
-clear; close all;
+clear; close all; profile off;
 rng(0)
 
 %% Load dataset
@@ -21,8 +21,8 @@ test_p = 0.1;
 % train, validation and test splits;
 % X_train = X(1:training_p * n, :);
 % y_train = y(1:training_p * n, :);
-X_train = X(1:2, :);
-y_train = y(1:2, :);
+X_train = X(1:7, :);
+y_train = y(1:7, :);
 X_holdout = X(training_p*n+1:(validation_p + training_p)*n, :);
 y_holdout = y(training_p*n+1:(validation_p + training_p)*n, :);
 X_test = X((validation_p + training_p)*n+1:n, :);
@@ -38,7 +38,7 @@ K = rbf(X_train, X_train, g);
 if useUnbiasedVersion
     [a_ivm, S, idx] = ivmTrain(X_train, y_train, K, lambda);
 else
-    [a_ivm, S, idx] = ivmTrain2(X_train, y_train, K, lambda);
+    [a_ivm, S, idx] = ivmTrain3(X_train, y_train, K, lambda);
 end
 profile off;
 % profsave(profile('info'), './log/42035');
