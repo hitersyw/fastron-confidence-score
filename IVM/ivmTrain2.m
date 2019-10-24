@@ -17,7 +17,7 @@ if nargin < 4, lambda = 1; end
 
 Hk = inf(N,1);
 for k = 1:N
-    tic();
+    % tic();
     a_temp = cell(nnz(R_mark),1);
     H = zeros(nnz(R_mark),1);
     
@@ -64,7 +64,7 @@ for k = 1:N
     if k > 1 && abs((Hk(k) - Hk(k-1))/Hk(k)) < 0.001 % termination condition
         break;
     end
-    toc();
+    % toc();
 end
 display(sprintf('Iterations: %d', k));
 
