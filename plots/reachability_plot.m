@@ -13,14 +13,19 @@ n = size(X, 1);
 input_type = "Score from 0 to 1";
 spec = "%2f";
 
-shape = [15,15,5]; % (x, y, theta);
-x1 = reshape(X(:, 1), shape);
-x2 = reshape(X(:, 2), shape);
+shape = [5, 15, 15]; % (theta, y, x);
+x1 = reshape(X(:, 1), [5, 15, 15]);
+x2 = reshape(X(:, 2), [5, 15, 15]);
+theta = reshape(X(:, 4), [5, 15, 15]);
 y = reshape(y, shape);
-figure();
 
 % fix theta;
-plot3(reshape(x1(:, :, 1), [15*15,1]), reshape(x2(:, :, 1),[15*15,1]), reshape(y(:, :, 1),[15*15,1]), 'b.');
-xlabel('X');
-ylabel('Y');
-zlabel('score');
+for i = 1:5
+    
+    figure();
+    surf(reshape(x1(i, :, :), [15,15]), reshape(x2(i, :, :),[15,15]), reshape(y(i, :, :),[15,15]), reshape(y(i, :, :),[15,15]));
+    xlabel('X');
+    ylabel('Y');
+    zlabel('score');
+    title(gca, sprintf('Theta: %2f', theta(i, 1, 1)));
+end

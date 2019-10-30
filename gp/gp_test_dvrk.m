@@ -18,28 +18,60 @@ spec = "%2f";
 %% Fit Gaussian Regression on the data;
 gprMdl = fitrgp(X, y, 'KernelFunction', 'squaredexponential', ...
     'Sigma', sqrt(1.0/(2*g)));
-p = min(max(resubPredict(gprMdl),0), 1); % clip the values;
 
 %% Plot the original data points; 
-figure();
-plot3(X(:,1), X(:,2), y, 'b.');
-xlabel('X');
-ylabel('Y');
-zlabel('score');
-legend({'data', 'prediction'});
+shape = [5, 15, 15]; % (theta, y, x);
+x1 = reshape(X(:, 1), [5, 15, 15]);
+x2 = reshape(X(:, 2), [5, 15, 15]);
+theta = reshape(X(:, 4), [5, 15, 15]);
+y = reshape(y, shape);
 
-%% Divide the data into grids;
-figure();
-shape = [15,15,5];
-x = reshape(X(:, 1), shape); 
-y = reshape(X(:, 2), shape);
-theta = reshape(X(:, 4), shape);
-score = reshape(p, shape);
-surf(x(:, :, 1), y(:, :, 1), score(:, :, 1), score(:, :, 1)); % use only 1 theta value;
-xlabel('X');
-ylabel('Y');
-zlabel('score');
-% figure();
+X_t = reshape(X, [5, 15, 15, 4]);
+
+% fix theta;
+for i = 1:5
+    X_test = reshape(X_t(i, :, :, :), [], 4); % fix theta;
+    [mu, std, yint] = predict(gprMdl, X_test);
+    
+    p1 = mu + std;
+    p2 = mu - std;
+    
+    figure();
+    
+    % sigma plots; 
+    subplot(2, 2, 1);
+    surf(reshape(x1(i, :, :), [15,15]), reshape(x2(i, :, :),[15,15]), reshape(y(i, :, :),[15,15]), ...
+        'FaceColor','r', 'FaceAlpha',1.0, 'EdgeColor','none');
+    hold on;
+    % prediction
+    surf(reshape(x1(i, :, :), [15,15]), reshape(x2(i, :, :),[15,15]), reshape(p1,[15,15]), ...
+        'FaceColor','g', 'FaceAlpha',0.5, 'EdgeColor','none');
+    hold on;
+    surf(reshape(x1(i, :, :), [15,15]), reshape(x2(i, :, :),[15,15]), reshape(p2,[15,15]), ...
+    'FaceColor','g', 'FaceAlpha',0.5, 'EdgeColor','none');
+    hold off; 
+    xlabel('X');
+    ylabel('Y');
+    zlabel('score');
+    title('Confidence Interval');
+    
+    % error plot;
+    subplot(2, 2, 2);
+    surf(reshape(x1(i, :, :), [15,15]), reshape(x2(i, :, :),[15,15]), reshape(mu,[15,15]), ...
+    'FaceColor','r', 'FaceAlpha',0.5, 'EdgeColor','none');
+    hold on;
+    residual = reshape(y(i, :, :), [15,15]) - reshape(mu, [15, 15]);
+    quiver3(reshape(x1(i, :, :), [15,15]), reshape(x2(i, :, :), [15, 15]), ...
+        reshape(mu, [15,15]), zeros(15,15), zeros(15,15), residual);    
+    hold off; 
+    title('Error bar');
+    
+    % MSE;
+    subplot(2, 2, 3);
+    surf(reshape(x1(i, :, :), [15,15]), reshape(x2(i, :, :),[15,15]), residual.^2, ...
+        'FaceColor','b');
+    title('MSE');
+end
 % surf(X(:,1), X(:, 2), p, p, 'b.');
 % colorbar; 
 
