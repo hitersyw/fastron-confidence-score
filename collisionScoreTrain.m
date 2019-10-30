@@ -3,8 +3,9 @@ rng(0);
 init;
 
 %% load collision_score data
-score_dict = load("/Users/jamesdi/Dropbox/UCSD/Research/ARCLab/Code/"...
- + "ConfidenceScore/constraint_log/collision_score.mat");
+% score_dict = load("/Users/jamesdi/Dropbox/UCSD/Research/ARCLab/Code/"...
+%  + "ConfidenceScore/constraint_log/collision_score.mat");
+score_dict = load('/home/nikhildas/workspace/fastron_experimental/fastron_vrep/constraint_analysis/log/collision_score_n1125.mat');
 score = getfield(score_dict, 'collision_score');
 X = score(:, 1:4);
 y = score(:, 5);
@@ -79,9 +80,9 @@ Kv = rbf(X_test, X_test, g);
 p_gp = (mu - min(mu))/(max(mu) - min(mu)); % convert it to a [0, 1] value;
 
 %% GP - Matlab;
-gprMdl = fitrgp(X, y, 'KernelFunction', 'squaredexponential', ...
+gprMdl = fitrgp(X_train, y_train, 'KernelFunction', 'squaredexponential', ...
     'Sigma', sqrt(1.0/(2*g)));
-p_gp2 = predict(gprMdl, X_test);
+p_gp2 = min(max(predict(gprMdl, X_test),0), 1);
 % p_gp2 = (p_gp2 - min(p_gp2))/(max(p_gp2) - min(p_gp2));
 
 %% Bar graph for scores;
