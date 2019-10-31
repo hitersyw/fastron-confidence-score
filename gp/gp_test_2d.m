@@ -1,7 +1,7 @@
 close all;
 
 % initialize matlab util
-run('/home/nikhildas/workspace/matlab_util/init.m');
+% run('/home/jamesdi1993/workspace/arclab/matlab_util/init.m');
 
 g = 0.2;
 
