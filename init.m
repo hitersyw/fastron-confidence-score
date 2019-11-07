@@ -1,4 +1,2 @@
-addpath(genpath("../PRMLT"));
-addpath("./IVM");
-addpath("./MLP");
-addpath("./gp");
+addpath(genpath("/home/jamesdi1993/workspace/matlabCollection/"));
+addpath(genpath("./"));

@@ -1,7 +1,7 @@
 close all;
 
 % initialize matlab util
-run('/home/nikhildas/workspace/matlab_util/init.m');
+run('/home/jamesdi1993/workspace/matlabCollection/init.m');
 
 g = 20;
 
@@ -19,6 +19,6 @@ gprMdl = fitrgp(x', z', 'KernelFunction', 'squaredexponential', ...
     'Sigma', sqrt(1.0/(2*g)));
 [mu, std, yint] = resubPredict(gprMdl);
 plot(x, mu, 'r');
-shadedErrorBar(x, mu, 2*std);
+shadedErrorBar(x, mu, std);
 legend({'data', 'prediction'});
 title('1d Gaussian Process');

@@ -79,14 +79,14 @@ for i = 1:5
     hold off; 
     title('Error bar');
     
-    % MSE;
+    % Squared Error;
     subplot(2, 2, 3);
     surf(reshape(x1(i, :, :), [15,15]), reshape(x2(i, :, :),[15,15]), residual.^2, ...
         'FaceColor','b', 'EdgeColor','none');
     xlabel('X');
     ylabel('Y');
     zlabel('score');
-    title('MSE');
+    title('Squared Error');
     
     sgtitle(sprintf("%s for theta: %.2f", strrep(dataset, "_", " "), theta(i, 1, 1)));
 end
