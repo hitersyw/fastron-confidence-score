@@ -2,7 +2,7 @@ clear; close all;
 rng('default');
 
 %% Hyper-parameters
-g = 5;
+g = 40;
 
 %% Load collision_score data
 dataset = 'collision_score';
@@ -55,66 +55,69 @@ for i = 1:5
 %     p1 = mu + std;
 %     p2 = mu - std;
 
-    figure();
+    figure(1); clf;
+    whitebg(1, 'k'); % set gray background;
     
     % Prediction and Original data;
     ha = tight_subplot(2, 2, [.1 .1],[.1 .2],[.1 .1]);
     
     axes(ha(1));
-    h1 = surf(reshape(xx, [15,15]), reshape(yy,[15,15]), reshape(y_t(i, :, :),[15,15]), ...
-        'FaceColor','g', 'FaceAlpha',0.5);
+    h1 = plot3(xx(:), yy(:), y_t(i,:), 'w.');
     hold on;
     
     % prediction
     h2 = surf(reshape(xx, [15,15]), reshape(yy,[15,15]), reshape(y_pred, [15,15]), ...
-        'FaceColor','r', 'FaceAlpha',1.0);
+        'FaceColor','r', 'EdgeColor', 'k', 'FaceAlpha', 1.0);
     hold off; 
     xlabel('X');
     ylabel('Y');
     zlabel('score');
-    
+    grid off;
     title('Prediction and Original Data');
     
     % error plot;
     axes(ha(2));
     h3 = surf(reshape(xx, [15,15]), reshape(yy,[15,15]), reshape(y_pred,[15,15]), ...
-    'FaceColor','r', 'FaceAlpha',0.5, 'EdgeColor','none');
+    'FaceColor','r', 'FaceAlpha',1.0, 'EdgeColor','k');
     hold on;
-    residual = reshape(y_t(i, :, :), [15,15]) - reshape(y_pred, [15, 15]);
+    residual = reshape(y_t(i, :, :), [15,15]) - reshape(y_pred, [15,15]);
     quiver3(reshape(xx, [15,15]), reshape(yy, [15, 15]), ...
-        reshape(y_pred, [15,15]), zeros(15,15), zeros(15,15), residual);
+        reshape(y_pred, [15,15]), zeros(15,15), zeros(15,15), residual, 0, 'Color', 'w'); % do not scale S;
     xlabel('X');
     ylabel('Y');
     zlabel('score');
-    
-    hold off; 
+    grid off; hold off; 
     title('Error bar');
     
     % Support Point Visualization
+    
+    w_t = reshape(w_infer, shape);
+    S = find(w_t(i, :, :));
+    R = find(~w_t(i, :, :));
     axes(ha(3));
     xx = x1(i, :, :);
     yy = x2(i, :, :);
-    plot3(xx(:), yy(:), y_test(:),'r.');
-    hold on;
+%     plot3(xx(:), yy(:), y_test(:),'w.'); % the rest of the points
+%     hold on
+    plot3(xx(S), yy(S), y_test(S), 'g.', 'markerSize', 10); % support points
+    hold on; 
     % prediction
-%     h4 = surf(reshape(xx, [15,15]), reshape(yy,[15,15]), reshape(y_pred + epsilon,[15,15]), ...
-%         'FaceColor','y', 'FaceAlpha',1.0, 'EdgeColor','none');
-%     hold on;
-%     surf(reshape(xx, [15,15]), reshape(yy,[15,15]), reshape(y_pred - epsilon,[15,15]), ...
-%         'FaceColor','y', 'FaceAlpha',1.0, 'EdgeColor','none');
-%     xlabel('X');
-%     ylabel('Y');
-%     zlabel('score');
-%     title('Epsilon band');
-    hold off; 
-    
-    % Sqaured Error;
-    axes(ha(4));
-    h5 = surf(reshape(xx, [15,15]), reshape(yy,[15,15]), residual.^2, ...
-        'FaceColor','b', 'EdgeColor','none');
-    xlabel('X');
+    h4 = surf(reshape(xx, [15,15]), reshape(yy,[15,15]), reshape(y_pred,[15,15]), ...
+        'FaceColor','r', 'FaceAlpha',1.0, 'EdgeColor','k');
+    hold on;
+    xlabel('X')
     ylabel('Y');
     zlabel('score');
+    title('Support points');
+    
+    % Squared Error;
+    axes(ha(4));
+    h5 = surf(reshape(xx, [15,15]), reshape(yy,[15,15]), residual.^2, ...
+        'FaceColor','b', 'EdgeColor','k');
+    xlabel('X');
+    ylabel('Y');
+    zlabel('Error');
+    grid off;
     title('Squared Error');
     
     % Legend

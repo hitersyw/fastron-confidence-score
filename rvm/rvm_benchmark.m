@@ -4,7 +4,8 @@ rng(0);
 %% Hyper-parameters;
 n = 1125; 
 dataset = 'reachability_score';
-g = 5;
+maxIter = 5000;
+g = 40;
 
 %% Load collision_score data
 score_dict = load(sprintf('/Users/jamesdi/Dropbox/UCSD/Research/ARCLab/Code/ConfidenceScore/dvrk_data/%s_n%d.mat', dataset, n));
@@ -29,7 +30,6 @@ M = size(K,2);
 fprintf("Size of training set: %d; test set: %d", size(X_train,1), size(X_test,1));
 
 %% Define model parameters
-maxIter = 500;
 OPTIONS = SB2_UserOptions('iterations', maxIter,...
                           'diagnosticLevel', 2,...
 						  'monitor', 10);
