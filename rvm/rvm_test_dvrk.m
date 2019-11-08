@@ -1,11 +1,11 @@
 clear; close all;
-rng(0);
+rng('default');
 
-%% Hyper-parameters;
-
-dataset = 'collision_score';
+%% Hyper-parameters
+g = 5;
 
 %% Load collision_score data
+dataset = 'collision_score';
 score_dict = load(sprintf('/Users/jamesdi/Dropbox/UCSD/Research/ARCLab/Code/ConfidenceScore/dvrk_data/%s_n1125.mat', dataset));
 score = getfield(score_dict, dataset);
 X = score(:, 1:4);
@@ -13,16 +13,23 @@ y = score(:, 5);
 n = size(X, 1);
 input_type = "Score from 0 to 1";
 
-%% Fit Support Vector Regression on the data;
-svrMdl = fitrsvm(X, y,'KernelFunction','rbf', 'KernelScale','auto',...
-            'Solver','SMO', ...
-            'Standardize',false, ...
-            'Epsilon', 0.01, ...
-            'verbose',1);
-epsilon = svrMdl.ModelParameters.Epsilon;
+BASIS = rbf(X, X, g);
+M = size(BASIS,2);
 
 
-%% Plot the fitted SVR surfaces; 
+%% Define model parameters
+maxIter = 500;
+OPTIONS = SB2_UserOptions('iterations', maxIter,...
+                          'diagnosticLevel', 2,...
+						  'monitor', 10);
+SETTINGS	= SB2_ParameterSettings('NoiseStd',0.1);
+
+[PARAMETER, HYPERPARAMETER, DIAGNOSTIC] = ...
+    SparseBayes('Gaussian', BASIS, y, OPTIONS, SETTINGS);
+w_infer						= zeros(M,1);
+w_infer(PARAMETER.Relevant)	= PARAMETER.Value;
+
+%% Plot the the fitted RVM surface;
 shape = [5, 15, 15]; % (theta, y, x);
 x1 = reshape(X(:, 1), [5, 15, 15]);
 x2 = reshape(X(:, 2), [5, 15, 15]);
@@ -38,7 +45,10 @@ X_t = reshape(X, [5, 15, 15, 4]);
 for i = 1:5
     X_test = reshape(X_t(i, :, :, :), [], 4); % fix theta;
     y_test = y_t(i, :, :);
-    y_pred = predict(svrMdl, X_test);
+    
+    basis_test = rbf(X_test, X, g);
+    
+    y_pred = basis_test * w_infer;
     
     xx = x1(i, :, :);
     yy = x2(i, :, :);
@@ -52,13 +62,12 @@ for i = 1:5
     
     axes(ha(1));
     h1 = surf(reshape(xx, [15,15]), reshape(yy,[15,15]), reshape(y_t(i, :, :),[15,15]), ...
-        'FaceColor','g', 'FaceAlpha',0.5, 'EdgeColor','none');
+        'FaceColor','g', 'FaceAlpha',0.5);
     hold on;
-    
     
     % prediction
     h2 = surf(reshape(xx, [15,15]), reshape(yy,[15,15]), reshape(y_pred, [15,15]), ...
-        'FaceColor','r', 'FaceAlpha',1.0, 'EdgeColor','none');
+        'FaceColor','r', 'FaceAlpha',1.0);
     hold off; 
     xlabel('X');
     ylabel('Y');
@@ -88,16 +97,16 @@ for i = 1:5
     plot3(xx(:), yy(:), y_test(:),'r.');
     hold on;
     % prediction
-    h4 = surf(reshape(xx, [15,15]), reshape(yy,[15,15]), reshape(y_pred + epsilon,[15,15]), ...
-        'FaceColor','y', 'FaceAlpha',1.0, 'EdgeColor','none');
-    hold on;
-    surf(reshape(xx, [15,15]), reshape(yy,[15,15]), reshape(y_pred - epsilon,[15,15]), ...
-        'FaceColor','y', 'FaceAlpha',1.0, 'EdgeColor','none');
+%     h4 = surf(reshape(xx, [15,15]), reshape(yy,[15,15]), reshape(y_pred + epsilon,[15,15]), ...
+%         'FaceColor','y', 'FaceAlpha',1.0, 'EdgeColor','none');
+%     hold on;
+%     surf(reshape(xx, [15,15]), reshape(yy,[15,15]), reshape(y_pred - epsilon,[15,15]), ...
+%         'FaceColor','y', 'FaceAlpha',1.0, 'EdgeColor','none');
+%     xlabel('X');
+%     ylabel('Y');
+%     zlabel('score');
+%     title('Epsilon band');
     hold off; 
-    xlabel('X');
-    ylabel('Y');
-    zlabel('score');
-    title('Epsilon band');
     
     % Sqaured Error;
     axes(ha(4));
@@ -108,17 +117,15 @@ for i = 1:5
     zlabel('score');
     title('Squared Error');
     
-    
     % Legend
-    lh = legend([h1,h2,h4,h5], {'Original', 'Predicted', 'Support Boundary', 'Error'}, 'location','northeast');
+    lh = legend([h1,h2,h5], {'Original', 'Predicted', 'Error'}, 'location','northeast');
     set(lh,'position',[.85 .85 .1 .1])
     sgtitle(sprintf("%s for theta: %.2f", strrep(dataset, "_", " "), theta(i, 1, 1)));
 end
 
 % Compute MSE Loss;
-y_pred = predict(svrMdl, X);
+y_pred = BASIS * w_infer;
 mu = max(min(y_pred, 1),0); % clip the value between 0 and 1;
 eps = y_pred - y;
 l = eps' * eps / n;
 fprintf("MSE Loss: %.4f\n", l);
-
