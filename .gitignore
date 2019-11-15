@@ -5,3 +5,4 @@ Results/
 DiscriminativeModels.ipynb
 *.json
 .idea/
+plots/

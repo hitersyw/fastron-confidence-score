@@ -5,8 +5,8 @@ rng('default');
 g = 40;
 
 %% Load collision_score data
-dataset = 'collision_score';
-score_dict = load(sprintf('/Users/jamesdi/Dropbox/UCSD/Research/ARCLab/Code/ConfidenceScore/dvrk_data/%s_n1125.mat', dataset));
+dataset = 'reachability_score';
+score_dict = load(sprintf('/home/jamesdi1993/workspace/arclab/fastron_experimental/fastron_vrep/constraint_analysis/log/%s_n1125.mat', dataset));
 score = getfield(score_dict, dataset);
 X = score(:, 1:4);
 y = score(:, 5);
@@ -56,6 +56,7 @@ for i = 1:5
 %     p2 = mu - std;
 
     figure(1); clf;
+    fig.InvertHardcopy = 'off'
     whitebg(1, 'k'); % set gray background;
     
     % Prediction and Original data;
@@ -108,7 +109,7 @@ for i = 1:5
     xlabel('X')
     ylabel('Y');
     zlabel('score');
-    title('Support points');
+    title('Relevance points');
     
     % Squared Error;
     axes(ha(4));
