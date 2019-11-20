@@ -5,4 +5,5 @@ Results/
 DiscriminativeModels.ipynb
 *.json
 .idea/
-plots/
+plots
+profile_log/
