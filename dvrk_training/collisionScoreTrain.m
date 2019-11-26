@@ -5,7 +5,7 @@ init;
 %% load collision_score data
 % score_dict = load("/Users/jamesdi/Dropbox/UCSD/Research/ARCLab/Code/"...
 %  + "ConfidenceScore/constraint_log/collision_score.mat");
-score_dict = load('/home/nikhildas/workspace/fastron_experimental/fastron_vrep/constraint_analysis/log/collision_score_n1125.mat');
+score_dict = load(base_dir + 'log/collision_score_n1125.mat');
 score = getfield(score_dict, 'collision_score');
 X = score(:, 1:4);
 y = score(:, 5);

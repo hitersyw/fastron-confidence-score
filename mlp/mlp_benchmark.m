@@ -1,22 +1,8 @@
-function [t_train, t_test, l, model] = mlp_benchmark(dataset, n)
+function [t_train, t_test, l, model] = mlp_benchmark(input_path, dataset, n)
 
     %% Load dataset
-    score_dict = load(sprintf('/home/jamesdi1993/workspace/arclab/fastron_experimental/fastron_vrep/constraint_analysis/log/%s_n%d.mat', dataset, n));
-    score = getfield(score_dict, dataset);
-    X = score(:, [1 2 4]); % omit z because it is held constant in our dataset; [x,y,\theta]
-    y = score(:, 5);
-    n = size(X, 1);
-    input_type = "Score from 0 to 1";
-
-    p_train = 0.8;
-    idx = randperm(n); % shuffle the dataset;
-    X = X(idx, :);
-    X_train = X(1:ceil(n*p_train), :);
-    y_train = y(1:ceil(n*p_train));
-
-    X_test = X(ceil(n*p_train+1):n, :);
-    y_test = y(ceil(n*p_train+1):n);
-
+    [X_train, y_train, X_test, y_test] = load_dvrk(input_path, dataset, n, false);
+    
     fprintf("Size of training set: %d; test set: %d\n", size(X_train,1), size(X_test,1));
 
     %% Fit MLP for regression on it;
@@ -29,7 +15,7 @@ function [t_train, t_test, l, model] = mlp_benchmark(dataset, n)
 
     % Compute MSE Loss;
     tic()
-    n_test = size(X_test, 1)
+    n_test = size(X_test, 1);
     y_pred = mlpRegPred(model, X_test')';
     t_test = toc() / n_test;
     mu = max(min(y_pred, 1),0); % clip the value between 0 and 1;

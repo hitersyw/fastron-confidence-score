@@ -1,24 +1,11 @@
-function [t_train, t_test, l, Sn] = rvm_benchmark(dataset, n)
+function [t_train, t_test, l, Sn] = rvm_benchmark(base_path, dataset, n)
 
     %% Hyper-parameters;
     g = 40;
     maxIter = 5000;
     %% Load collision_score data
-    score_dict = load(sprintf('/home/jamesdi1993/workspace/arclab/fastron_experimental/fastron_vrep/constraint_analysis/log/%s_n%d.mat', dataset, n));
-    score = getfield(score_dict, dataset);
-    X = score(:, [1 2 4]); % omit z because it is held constant in our dataset; [x,y,\theta]
-    y = score(:, 5);
-    n = size(X, 1);
-    input_type = "Score from 0 to 1";
-
-    p_train = 0.8;
-    idx = randperm(n); % shuffle the dataset;
-    X = X(idx, :);
-    X_train = X(1:ceil(n*p_train), :);
-    y_train = y(1:ceil(n*p_train));
-
-    X_test = X(ceil(n*p_train+1):n, :);
-    y_test = y(ceil(n*p_train+1):n);
+    input_path = base_path + 'log/%s_n%d.mat'
+    [X_train, y_train, X_test, y_test] = load_dvrk(input_path, dataset, n, false);
 
     K = rbf(X_train, X_train, g);
     M = size(K,2);

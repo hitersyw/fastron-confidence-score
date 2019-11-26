@@ -1,12 +1,13 @@
 clear; close all;
 rng('default');
+init;
 
 %% Hyper-parameters
 g = 40;
 
 %% Load collision_score data
 dataset = 'reachability_score';
-score_dict = load(sprintf('/home/jamesdi1993/workspace/arclab/fastron_experimental/fastron_vrep/constraint_analysis/log/%s_n1125.mat', dataset));
+score_dict = load(sprintf(base_dir + "log/%s_n1125.mat", dataset));
 score = getfield(score_dict, dataset);
 X = score(:, 1:4);
 y = score(:, 5);

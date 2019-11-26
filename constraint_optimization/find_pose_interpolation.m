@@ -1,9 +1,7 @@
-
-function [x] = find_pose(x0, lb, ub, reachability_mdl)
-% Function for computing the optimal pose, with a start configuration;
+function [x] = find_pose_interpolation(x0, lb, ub, F)
     fprintf("Initial position: [%.2f, %.2f, %.2f]\n", x0);
     fprintf("Upper bound:[%.2f, %.2f, %.2f]; Lower bound:[%.2f, %.2f, %.2f]", ub, lb);
-    fun = @(x) -predict(reachability_mdl, x); 
+    fun = @(x) -F(x); 
     % Add inequality constraints if needed;
     A = [];
     b = [];

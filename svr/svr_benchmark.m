@@ -1,28 +1,15 @@
 
-function [t_train, t_test, l, Sn] = svr_benchmark(dataset, n)
+function [t_train, t_test, l, Sn] = svr_benchmark(base_path, dataset, n)
 
     %% Load collision_score data
-    score_dict = load(sprintf('/home/jamesdi1993/workspace/arclab/fastron_experimental/fastron_vrep/constraint_analysis/log/%s_n%d.mat', dataset, n));
-    score = getfield(score_dict, dataset);
-    X = score(:, [1 2 4]); % omit z because it is held constant in our dataset; [x,y,\theta]
-    y = score(:, 5);
-    n = size(X, 1);
-    input_type = "Score from 0 to 1";
+    input_path = sprintf(base_path + "log/%s_n%d.mat", dataset, n);
+    [X_train, y_train, X_test, y_test] = load_dvrk(input_path, dataset, n, false);
 
-    p_train = 0.8;
-    idx = randperm(n); % shuffle the dataset;
-    X = X(idx, :);
-    X_train = X(1:ceil(n*p_train), :);
-    y_train = y(1:ceil(n*p_train));
-
-    X_test = X(ceil(n*p_train+1):n, :);
-    y_test = y(ceil(n*p_train+1):n);
-
-    fprintf("Size of training set: %d; test set: %d", size(X_train,1), size(X_test,1));
+    fprintf("Size of training set: %d; test set: %d\n", size(X_train,1), size(X_test,1));
 
     %% Fit Support Vector Regression on the data;
     tic()
-    svrMdl = fitrsvm(X_train, y_train,'KernelFunction','rbf', 'KernelScale','auto',...
+    svrMdl = fitrsvm(X_train, y_train, 'KernelFunction', 'rbf', 'KernelScale','auto',...
                 'Solver','SMO', 'Epsilon', 0.2, ...
                 'Standardize',false, 'verbose',0);
     t_train = toc();

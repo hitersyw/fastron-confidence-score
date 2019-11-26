@@ -1,12 +1,12 @@
 clear; close all;
 rng(0);
+init;
 
 %% Hyper-parameters;
-
 dataset = 'collision_score';
 
 %% Load collision_score data
-score_dict = load(sprintf('/Users/jamesdi/Dropbox/UCSD/Research/ARCLab/Code/ConfidenceScore/dvrk_data/%s_n1125.mat', dataset));
+score_dict = load(sprintf(base_dir + "log/%s_n1125.mat", dataset));
 score = getfield(score_dict, dataset);
 X = score(:, 1:4);
 y = score(:, 5);
