@@ -6,7 +6,7 @@ g = 50;
 input_path = base_dir + 'log/%s_n%d.mat';
 output_path = base_dir + 'pose/poses_%s.csv';
 
-dataset = 'collision_score';
+dataset = 'reachability_score';
 n = 2925;
 [X_train, y_train, X_test, y_test] = load_dvrk(input_path, dataset, n, false);
 
