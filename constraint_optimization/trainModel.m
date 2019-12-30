@@ -1,10 +1,11 @@
 function [mdl] = trainModel(X_train, y_train, X_test, y_test,model)
     
     if model == "svr"
-        mdl = fitrsvm(X_train, y_train,'KernelFunction','rbf', 'KernelScale','auto',...
-                'Solver','SMO', 'Epsilon', 0.05, ...
-                'Standardize',false, 'verbose',0);
-            
+%         mdl = fitrsvm(X_train, y_train,'KernelFunction','rbf', 'KernelScale','auto',...
+%                 'Solver','SMO', 'Epsilon', 0.05, ...
+%                 'Standardize',false, 'verbose',0);
+        
+        mdl = fitrsvm(X_train,y_train,'KernelFunction','rbf','KernelScale',0.1,'BoxConstraint',5);
         % 
         eps_train = predict(mdl, X_train) - y_train;
         l_train = eps_train' * eps_train / size(X_train, 1);

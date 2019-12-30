@@ -3,7 +3,7 @@ rng(0);
 init;
 
 g = 50;
-p_train = 1.0;
+p_train = 0.95;
 
 dataset = "reachability_score";
 load reachability_score_n2925.mat;
@@ -11,6 +11,9 @@ n = 2925;
 score = reachability_score;
 X = score(:, [1 2 4]); % omit z because it is held constant in our dataset; [x,y,\theta]
 y = score(:, 5);
+
+xmin = min(X);
+xmax = max(X);
 
 % scale the dataset;
 if 1
@@ -44,7 +47,7 @@ y_svr_test = predict(svrMdl, X_test);
 close all;
 figure; clf;
 
-edges = linspace(0,1,11);
+edges = linspace(0, 1, 11);
 h = histcounts(y,edges);
 h_pred = histcounts(y_svr,edges);
 h_pred_scaled = histcounts(y_svr_scaled,edges);
