@@ -15,14 +15,15 @@ function [X_train, y_train, X_test, y_test] = load_dvrk2(input_path, dataset, n,
     n = size(X, 1);
     input_type = "Score from 0 to 1";
 
-    p_train = 0.95;
+    p_test = 0.1;
     idx = randperm(n); % shuffle the dataset;
     X = X(idx, :);
-    X_train = X(1:ceil(n*p_train), :);
-    y_train = y(1:ceil(n*p_train));
+    y = y(idx);
+    X_test = X(1:ceil(n*p_test), :);
+    y_test = y(1:ceil(n*p_test));
 
-    X_test = X(ceil(n*p_train+1):n, :);
-    y_test = y(ceil(n*p_train+1):n);
+    X_train = X(ceil(n*p_test+1):n, :);
+    y_train = y(ceil(n*p_test+1):n);
     
     if show_dist
         close all;
