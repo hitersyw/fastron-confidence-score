@@ -1,4 +1,4 @@
-function [X_train, y_train, X_test, y_test] = load_dvrk2(input_path, dataset, n, show_dist, lb)
+function [X_train, y_train, X_test, y_test] = load_dvrk2(input_path, dataset, n, show_dist, shuffle, lb)
     
     score_dict = load(sprintf(input_path, dataset, n));
     score = getfield(score_dict, dataset);
@@ -6,7 +6,7 @@ function [X_train, y_train, X_test, y_test] = load_dvrk2(input_path, dataset, n,
     y = score(:, 5);
     
     % Set lower bound to filter
-    if nargin < 5, lb = 0; end
+    if nargin < 6, lb = 0; end
     
     nz = y >= lb;
     X = X(nz, :);
@@ -16,9 +16,13 @@ function [X_train, y_train, X_test, y_test] = load_dvrk2(input_path, dataset, n,
     input_type = "Score from 0 to 1";
 
     p_test = 0.1;
-    idx = randperm(n); % shuffle the dataset;
-    X = X(idx, :);
-    y = y(idx);
+  
+    if shuffle
+        % shuffle the dataset;
+        idx = randperm(n); 
+        X = X(idx, :);
+        y = y(idx);
+    end
     X_test = X(1:ceil(n*p_test), :);
     y_test = y(1:ceil(n*p_test));
 

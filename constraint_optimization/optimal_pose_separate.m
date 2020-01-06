@@ -5,11 +5,11 @@ init;
 input_path = base_dir + "log/%s_n%d.mat";
 output_path = base_dir + "pose/poses_%s.csv";
 
-dataset = 'collision_score';
+dataset = 'reachability_score';
 n = 2925;
 
 %% Load Dataset
-[X_train, y_train, X_test, y_test] = load_dvrk2(input_path, dataset, n, false);
+[X_train, y_train, X_test, y_test] = load_dvrk2(input_path, dataset, n, false, true);
 [max_ytrain, max_idx_train] = max(y_train);
 [max_ytest, max_idx_test] = max(y_test);
 fprintf("The maximum of y_train is: %.2f; position: [%.3f, %.3f, %.3f]\n", max_ytrain, X_train(max_idx_train, :));
@@ -45,7 +45,7 @@ X_init = (xmax - xmin).* rand(n_init, size(xmax, 1)) + xmin;
 % x0 = [-1.0826, -0.3033, 0.6599, -1.309];
 z = 0.6599;
 
-X = zeros(size(X_init, 1), size(X_init, 2) + 1);
+X = zeros(size(X_init, 1), size(X_init, 2) + 2);
 for i=1:size(X, 1)
     x0 = X_init(i, :);
     x = find_pose(x0, xmin, xmax, mdl, scale_input, scale_output);
@@ -54,9 +54,9 @@ for i=1:size(X, 1)
     % self_collision_score = predict(self_collision_mdl, x);
     fprintf("Position: [%.3f, %.3f, %.3f]; Score is: %s\n", x, score);
     % fprintf("Position: [%.3f, %.3f, %.3f]; Predicted self-collision score: %s; Actual: %s\n", x, self_collision_score);
-    X(i, :) = [x(1:2), z, x(3)];
+    X(i, :) = [x(1:2), z, x(3), score];
 end
 
-path = sprintf(output_path, '11_19');
+path = sprintf(output_path, '01_06');
 writematrix(X, path);
 % TODO: output it to a csv file for validation on the dVRK scene;
