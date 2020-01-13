@@ -5,7 +5,7 @@ init;
 input_path = base_dir + "log/%s_n%d.mat";
 output_path = base_dir + "pose/poses_%s.csv";
 
-dataset = 'reachability_score';
+dataset = 'self_collision_score';
 n = 2925;
 
 %% Load Dataset
@@ -16,10 +16,11 @@ fprintf("The maximum of y_train is: %.2f; position: [%.3f, %.3f, %.3f]\n", max_y
 fprintf("The maximum of y_test is: %.2f; position: [%.3f, %.3f, %.3f]\n", max_ytest, X_test(max_idx_test, :));
 
 %% Normalize the dataset;
+%  The input is normalized between -1 and 1, along on each dimension.
 xmax = max([X_train; X_test]);
 xmin = min([X_train; X_test]);
 % scale_input = @(x) x;
-scale_input = @(x) 2*(x - xmin)./(xmax - xmin) - 1; % Normalize input between -1 and 1;
+scale_input = @(x) 2*(x - xmin)./(xmax - xmin) - 1;
 X_train = scale_input(X_train);
 X_test = scale_input(X_test);
 
@@ -57,6 +58,6 @@ for i=1:size(X, 1)
     X(i, :) = [x(1:2), z, x(3), score];
 end
 
-path = sprintf(output_path, '01_06');
+path = sprintf(output_path, dataset);
 writematrix(X, path);
 % TODO: output it to a csv file for validation on the dVRK scene;
