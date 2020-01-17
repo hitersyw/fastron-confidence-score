@@ -1,5 +1,7 @@
 function h = colorScatter3(X, Y, Z, V, cm)
-V = (V-min(V))/(max(V) - min(V));
+if max(V)~= min(V)
+    V = (V-min(V))/(max(V) - min(V));
+end
 
 cm_idx = uint32(round((size(cm,1)-1)*V)+1);
 for i = 1:length(X)
