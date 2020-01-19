@@ -16,7 +16,7 @@ if nargin < 4
 end
 eta = 1e-5;
 tol = 1e-5;
-maxiter = 50000;
+maxiter = 5000;
 L = inf(1,maxiter);
 
 k = [size(X,1);k(:);size(y,1)];
@@ -59,6 +59,7 @@ for iter = 2:maxiter
         b{t} = b{t}-eta*db;
     end
 end
+fprintf("Maximum Iteration limit: %d exceeded!", maxiter);
 L = L(2:iter);
 model.W = W;
 model.b = b;

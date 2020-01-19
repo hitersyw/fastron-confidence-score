@@ -9,7 +9,7 @@ function [t_train, t_test, l, model] = mlp_benchmark(input_path, dataset, n)
     tic();
     h = [64,64];            % two hidden layers with 64 and 64 neurons
     lambda = 0.0001;        % Regularized Loss; 
-    [model, L] = mlpReg(X_train',y_train',h,lambda);
+    [model, L] = mlpRegSigmoid(X_train',y_train',h,lambda);
     % p_mlp_clipped = max(0, min(1, p_mlp)); % clip the values between [0,1];
     t_train = toc();
 

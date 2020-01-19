@@ -8,7 +8,7 @@ output_path = base_dir + "pose/poses_%s.csv";
 
 reachability_dataset = 'reachability_score';
 self_collision_dataset = 'self_collision_score';
-environment_collision_dataset = 'environment_collision_score';
+environment_collision_dataset = 'env_collision_score';
 n = 2925;
 
 %% Load Dataset
@@ -19,6 +19,7 @@ n = 2925;
 assert(all(X_reach == X_self_collision, 'all'));
 assert(all(X_reach == X_env_collision, 'all'));
 X = X_reach;
+
 %% Normalize the dataset;
 xmax = max(X);
 xmin = min(X);
@@ -105,7 +106,7 @@ fprintf("Reachability MSE Loss before scaling: %.4f, after scaling: %.4f \n", ..
 %% Plot the 3D space of raw self-collision, environment collision, and reachability scores.
 thres = 0.5;
 cm = jet(256);
-figure('Position', [327 87 1002 450]);
+figure('Position', [327 87 800 800]);
 subplot(2,2,1)
 colorScatter3(X(y_reach>thres,1),X(y_reach>thres,2),...
               X(y_reach>thres,3),y_reach(y_reach>thres), cm);
@@ -133,11 +134,49 @@ colorScatter3(X(y_reach>thres & y_self_collision > thres & y_env_collision > thr
               cm);
 view([153 58]); axis square; grid on;
 title("All > .5");
-sgtitle("Raw Scores");
+sgtitle("Raw scores");
 
-%% Plot the 3D space of collision and reachability scores produced with models;
+%% Plot the 3D grid space of collision and reachability scores produced with models;
+y_reach_grid = scale_output_reach(predict(reachability_mdl, X));
+figure('Position', [327 87 800 800]);
+% reachability;
+cm = jet(256);
+subplot(2,2,1)
+colorScatter3(X(y_reach_grid>thres,1),X(y_reach_grid>thres,2),...
+    X(y_reach_grid>thres,3),y_reach_grid(y_reach_grid>thres), cm);
+view([153 58]); axis square; grid on;
+title("Reachability > .5");
+    
+% Self Collision
+y_collision_grid = scale_output_collision(predict(self_collision_mdl, X));
+subplot(2,2,2)
+colorScatter3(X(y_collision_grid>thres ,1),X(y_collision_grid>thres,2),...
+    X(y_collision_grid>thres,3),y_collision_grid(y_collision_grid>thres), cm);
+view([153 58]); axis square; grid on;
+title("Self-collision > .5");
+
+% Env Collision
+y_env_collision_grid = predict(env_collision_mdl, X);
+subplot(2,2,3)
+colorScatter3(X(y_env_collision_grid>thres ,1),X(y_env_collision_grid>thres,2),...
+    X(y_env_collision_grid>thres,3),y_env_collision_grid(y_env_collision_grid>thres), cm);
+title("Env-collision > .5");
+
+% Combined Score
+combined_score_grid = y_collision_grid + y_reach_grid + y_env_collision_grid;
+subplot(2,2,4)
+colorScatter3(X(y_collision_grid>thres & y_reach_grid > thres & y_env_collision_grid > thres,1),...
+              X(y_collision_grid>thres & y_reach_grid > thres & y_env_collision_grid > thres, 2),...
+              X(y_collision_grid>thres & y_reach_grid > thres & y_env_collision_grid > thres,3), ...
+              combined_score_grid(y_collision_grid>thres & y_reach_grid >thres & y_env_collision_grid > thres),...
+              cm);
+view([153 58]); axis square; grid on;
+title("All > .5");
+sgtitle("Model-based scores grid");
+
+%% Plot the 3D uniform space of collision and reachability scores produced with models;
 y_reach_uniform = scale_output_reach(predict(reachability_mdl, X_uniform));
-figure('Position', [327 87 1002 450]);
+figure('Position', [327 87 800 800]);
 % reachability;
 cm = jet(256);
 subplot(2,2,1)
@@ -145,7 +184,7 @@ colorScatter3(X_uniform(y_reach_uniform>thres,1),X_uniform(y_reach_uniform>thres
     X_uniform(y_reach_uniform>thres,3),y_reach_uniform(y_reach_uniform>thres), cm);
 view([153 58]); axis square; grid on;
 title("Reachability > .5");
-
+    
 % Self Collision
 y_collision_uniform = scale_output_collision(predict(self_collision_mdl, X_uniform));
 subplot(2,2,2)
@@ -163,16 +202,16 @@ view([153 58]); axis square; grid on;
 title("Env-collision > .5");
 
 % AND three conditions
-combined_score = y_collision_uniform + y_reach_uniform + y_env_collision_uniform;
+combined_score_uniform = y_collision_uniform + y_reach_uniform + y_env_collision_uniform;
 subplot(2,2,4)
 colorScatter3(X_uniform(y_collision_uniform>thres & y_reach_uniform > thres & y_env_collision_uniform > thres,1),...
               X_uniform(y_collision_uniform>thres & y_reach_uniform > thres & y_env_collision_uniform > thres, 2),...
               X_uniform(y_collision_uniform>thres & y_reach_uniform > thres & y_env_collision_uniform > thres,3), ...
-              combined_score(y_collision_uniform>thres & y_reach_uniform >thres & y_env_collision_uniform > thres),...
+              combined_score_uniform(y_collision_uniform>thres & y_reach_uniform >thres & y_env_collision_uniform > thres),...
               cm);
 view([153 58]); axis square; grid on;
 title("All > .5");
-sgtitle("Model-based scores.");
+sgtitle("Model-based scores uniform");
 
 %% Find optimal poses
 n_init = 100;
@@ -181,8 +220,8 @@ X_init = (xmax - xmin).* rand(n_init, size(xmax, 1)) + xmin;
 % x0 = [-1.113, -0.403, -1.009]
 z = 0.6599;
 
-X = zeros(size(X_init, 1), size(X_init, 2) + 4);
-for i=1:size(X, 1)
+X_out = zeros(size(X_init, 1), size(X_init, 2) + 4);
+for i=1:size(X_out, 1)
     x0 = X_init(i, :);
     x = find_pose_combined(x0, xmin, xmax, self_collision_mdl, reachability_mdl,...
         env_collision_mdl, scale_input, scale_output_collision, scale_output_reach);
@@ -195,12 +234,12 @@ for i=1:size(X, 1)
             + "Self-collision score: %s; Env-collision score: %s\n",...
             x, reachability_score, collision_score, env_collision_score);
     % fprintf("Position: [%.3f, %.3f, %.3f]; Predicted self-collision score: %s; Actual: %s\n", x, self_collision_score);
-    X(i, :) = [x(1:2), z, x(3), reachability_score, collision_score, env_collision_score];
+    X_out(i, :) = [x(1:2), z, x(3), reachability_score, collision_score, env_collision_score];
 end
 
+% Dedupe poses;
+[C, IA, IC] = uniquetol(X_out(:,1:4), 0.05, 'ByRows', true);
+X_out = X_out(IA, :);
+
 path = sprintf(output_path, 'combined');
-writematrix(X, path);
-
-
-
-
+writematrix(X_out, path);
