@@ -25,8 +25,8 @@ X_train = scale_input(X_train);
 X_test = scale_input(X_test);
 
 %% Train the models;
-% self_collision_mdl = trainModel(X_train, y_train, X_test, y_test, 'svr');
-mdl = trainModel(X_train, y_train, X_test, y_test, 'svr');
+% self_collision_mdl = trainModel(X_train, y_train, X_test, y_test);
+mdl = trainModel(X_train, y_train, X_test, y_test);
 
 %% Predict output and find the max of y;
 X_uniform = (xmax - xmin).*rand(100000,size(X_test,2)) + xmin;

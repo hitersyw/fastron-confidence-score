@@ -1,14 +1,12 @@
-function [mdl] = trainModel(X_train, y_train, X_test, y_test, model)
-    if model == "svr"
+function [mdl] = trainSVR(X_train, y_train, X_test, y_test)
 %         mdl = fitrsvm(X_train, y_train,'KernelFunction','rbf', 'KernelScale','auto',...
 %                 'Solver','SMO', 'Epsilon', 0.05, ...
 %                 'Standardize',false, 'verbose',0);
-        
-        mdl = fitrsvm(X_train,y_train,'KernelFunction','rbf','KernelScale',0.1,'BoxConstraint',5);
-        % 
-        y_pred_train = predict(mdl, X_train);
-        y_pred_test = predict(mdl, X_test);
-    end
+
+    mdl = fitrsvm(X_train,y_train,'KernelFunction','rbf','KernelScale',0.1,'BoxConstraint',5);
+    % 
+    y_pred_train = predict(mdl, X_train);
+    y_pred_test = predict(mdl, X_test);
     
     % MSE Loss;
     eps_train = y_pred_train - y_train;
