@@ -13,7 +13,7 @@ reachability_dataset = 'reachability_score';
 self_collision_dataset = 'self_collision_score';
 environment_collision_dataset = 'env_collision_score';
 n = 2925;
-p_dataset = 0.2; % percentage of poses to initialize from the datset;
+p_dataset = 0.2; % percentage of poses to initialize from the dataset;
 n_init = 50;
 
 %% Load Dataset
@@ -41,7 +41,7 @@ X = scale_input(X);
 
 %% Shuffle and divide up the dataset;
 shuffle = true;
-p_test = 0.2;
+p_test = 0.01;
 if shuffle
     % shuffle the dataset;
     idx = randperm(n); 
@@ -70,7 +70,7 @@ env_collision_mdl = trainSVR(X_train, y_env_collision_train, X_test, y_env_colli
 reachability_mdl = trainSVR(X_train, y_reach_train, X_test, y_reach_test);
 
 %% Predict output and find the max of labels;
-X_uniform = (xmax - xmin).*rand(10000,size(X_test,2)) + xmin;
+X_uniform = (xmax - xmin).*rand(50000,size(X_test,2)) + xmin;
 X_uniform = scale_input(X_uniform);
 
 % labels
@@ -88,6 +88,12 @@ y_min_reachability = min(y_uniform_reachability);
 y_min_collision = min(y_uniform_collision);
 y_min_env_collision = min(y_uniform_env_collision);
 
+% max of combined_labels
+y_max_combined = max(y_uniform_reachability + y_uniform_collision + y_uniform_env_collision);
+y_min_combined = min(y_uniform_reachability + y_uniform_collision + y_uniform_env_collision);
+
+fprintf("Maximum combined score from uniform sampling: %.4f\n", y_max_combined);
+
 % scaling functions for output;
 scale_output_env_collision = @(y) (y - y_min_env_collision)./(y_max_env_collision - y_min_env_collision);
 scale_output_collision = @(y) (y - y_min_collision)./(y_max_collision - y_min_collision);
@@ -97,23 +103,29 @@ scale_output_reach = @(y) (y - y_min_reachability)./(y_max_reachability - y_min_
 y_self_collision_pred = predict(self_collision_mdl, X_test);
 l_self_collision = y_self_collision_test - y_self_collision_pred;
 l_scaling_self_collision = y_self_collision_test - scale_output_collision(y_self_collision_pred);
-fprintf("Self-Collision MSE Loss before scaling: %.4f, after scaling: %.4f \n", ...
+fprintf("Self-Collision MSE Loss before scaling: %.4f, after scaling: %.4f, Maximum diff: %.4f\n", ...
     (l_self_collision'*l_self_collision)/size(y_self_collision_test, 1), ...
-    (l_scaling_self_collision'*l_scaling_self_collision)/size(y_self_collision_test, 1));
+    (l_scaling_self_collision'*l_scaling_self_collision)/size(y_self_collision_test, 1), ...
+    max(abs(l_self_collision))...
+    );
 
 y_env_collision_pred = predict(env_collision_mdl, X_test);
 l_env_collision = y_env_collision_test - y_env_collision_pred;
 l_scaling_env_collision = y_env_collision_test - scale_output_collision(y_env_collision_pred);
-fprintf("Env-Collision MSE Loss before scaling: %.4f, after scaling: %.4f \n", ...
+fprintf("Env-Collision MSE Loss before scaling: %.4f, after scaling: %.4f, Maximum diff: %.4f\n", ...
     (l_env_collision'*l_env_collision)/size(y_env_collision_test, 1), ...
-    (l_scaling_env_collision'*l_scaling_env_collision)/size(y_env_collision_test, 1));
+    (l_scaling_env_collision'*l_scaling_env_collision)/size(y_env_collision_test, 1), ...
+    max(abs(l_env_collision))...
+    );
 
 y_reach_pred = predict(reachability_mdl, X_test);
 l_reach = y_reach_test - y_reach_pred;
 l_scaling_reach = y_reach_test - scale_output_reach(y_reach_pred);
-fprintf("Reachability MSE Loss before scaling: %.4f, after scaling: %.4f \n", ...
+fprintf("Reachability MSE Loss before scaling: %.4f, after scaling: %.4f, Maximum diff: %.4f\n", ...
     (l_reach'*l_reach)/size(y_reach_test, 1), ...
-    (l_scaling_reach'*l_scaling_reach)/size(y_reach_test, 1));
+    (l_scaling_reach'*l_scaling_reach)/size(y_reach_test, 1), ...
+    max(abs(l_reach))...
+    );
 
 %% Plot the 3D space of raw self-collision, environment collision, and reachability scores.
 thres = 0.5;

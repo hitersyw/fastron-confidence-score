@@ -12,9 +12,9 @@ output_path = base_dir + "test";
 load(model_path);
 
 %% Find optimal poses
-% x0 = [-1.0826, -0.3033, -1.309]; % maximum reacability;
-% x0 = [-1.1426, -0.3733, 0.9769]; % maximum combined score from the dataset; 
-x0 = [-1.1726   -0.3433   -1.5590];  
+% x0 = [-1.0826, -0.3033, -1.409]; % maximum reacability;
+% x0 = [-1.1426, -0.3733, -1.6090]; % maximum combined score from the dataset; 
+x0 = [-1.1726, -0.3433, -1.5590];  
 z = 0.6599;
 
 % optimization
