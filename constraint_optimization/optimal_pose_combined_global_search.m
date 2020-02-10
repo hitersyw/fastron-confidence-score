@@ -14,7 +14,7 @@ load(model_path);
 %% Find optimal poses
 % x0 = [-1.0826, -0.3033, -1.309]; % maximum reacability;
 % x0 = [-1.1426, -0.3733, 0.9769]; % maximum combined score from the dataset; 
-x0 = [-1.1726, -0.3433, -1.5590];  
+x0 = [-1.1726   -0.3433   -1.5590];  
 z = 0.6599;
 
 % optimization
@@ -25,8 +25,6 @@ tic();
 total_time = toc();
 
 %% Evaluate the scores of the found pose; 
-
-% print scores; 
 reachability_score = clip(scale_output_reach(predict(reachability_mdl, scale_input(x))),0.0001);
 collision_score = clip(scale_output_collision(predict(self_collision_mdl, scale_input(x))),0.0001);
 env_collision_score = clip(predict(env_collision_mdl, scale_input(x)),0.0001);

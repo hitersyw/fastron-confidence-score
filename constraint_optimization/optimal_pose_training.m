@@ -158,3 +158,106 @@ xlabel('X');
 ylabel('Y');
 zlabel('\theta');
 sgtitle("Raw scores");
+
+%% Plot the 3D grid space of collision and reachability scores produced with models;
+y_reach_grid = scale_output_reach(predict(reachability_mdl, X));
+figure('Position', [327 87 800 800]);
+
+% reachability;
+cm = jet(256);
+subplot(2,2,1)
+colorScatter3(X(y_reach_grid>thres,1),X(y_reach_grid>thres,2),...
+    X(y_reach_grid>thres,3),y_reach_grid(y_reach_grid>thres), cm);
+view([153 58]); axis square; grid on;
+xlabel('X');
+ylabel('Y');
+zlabel('\theta');
+title("Reachability > .5");
+    
+% Self Collision
+y_collision_grid = scale_output_collision(predict(self_collision_mdl, X));
+subplot(2,2,2)
+colorScatter3(X(y_collision_grid>thres ,1),X(y_collision_grid>thres,2),...
+    X(y_collision_grid>thres,3),y_collision_grid(y_collision_grid>thres), cm);
+view([153 58]); axis square; grid on;
+xlabel('X');
+ylabel('Y');
+zlabel('\theta');
+title("Self-collision > .5");
+
+% Env Collision
+y_env_collision_grid = predict(env_collision_mdl, X);
+subplot(2,2,3)
+colorScatter3(X(y_env_collision_grid>thres ,1),X(y_env_collision_grid>thres,2),...
+    X(y_env_collision_grid>thres,3),y_env_collision_grid(y_env_collision_grid>thres), cm);
+view([153 58]); axis square; grid on;
+xlabel('X');
+ylabel('Y');
+zlabel('\theta');
+title("Env-collision > .5");
+
+% Combined Score
+combined_score_grid = y_collision_grid + y_reach_grid + y_env_collision_grid;
+subplot(2,2,4)
+colorScatter3(X(y_collision_grid>thres & y_reach_grid > thres & y_env_collision_grid > thres,1),...
+              X(y_collision_grid>thres & y_reach_grid > thres & y_env_collision_grid > thres, 2),...
+              X(y_collision_grid>thres & y_reach_grid > thres & y_env_collision_grid > thres,3), ...
+              combined_score_grid(y_collision_grid>thres & y_reach_grid >thres & y_env_collision_grid > thres),...
+              cm);
+view([153 58]); axis square; grid on;
+xlabel('X');
+ylabel('Y');
+zlabel('\theta');
+title("All > .5");
+sgtitle("Model-based scores grid");
+
+%% Plot the 3D uniform space of collision and reachability scores produced with models;
+y_reach_uniform = scale_output_reach(predict(reachability_mdl, X_uniform));
+figure('Position', [327 87 800 800]);
+% reachability;
+cm = jet(256);
+subplot(2,2,1)
+colorScatter3(X_uniform(y_reach_uniform>thres,1),X_uniform(y_reach_uniform>thres,2),...
+    X_uniform(y_reach_uniform>thres,3),y_reach_uniform(y_reach_uniform>thres), cm);
+view([153 58]); axis square; grid on;
+xlabel('X');
+ylabel('Y');
+zlabel('\theta');
+title("Reachability > .5");
+    
+% Self Collision
+y_collision_uniform = scale_output_collision(predict(self_collision_mdl, X_uniform));
+subplot(2,2,2)
+colorScatter3(X_uniform(y_collision_uniform>thres ,1),X_uniform(y_collision_uniform>thres,2),...
+    X_uniform(y_collision_uniform>thres,3),y_collision_uniform(y_collision_uniform>thres), cm);
+view([153 58]); axis square; grid on;
+xlabel('X');
+ylabel('Y');
+zlabel('\theta');
+title("Self-collision > .5");
+
+% Env Collision
+y_env_collision_uniform = predict(env_collision_mdl, X_uniform);
+subplot(2,2,3)
+colorScatter3(X_uniform(y_env_collision_uniform>thres ,1),X_uniform(y_env_collision_uniform>thres,2),...
+    X_uniform(y_env_collision_uniform>thres,3),y_env_collision_uniform(y_env_collision_uniform>thres), cm);
+view([153 58]); axis square; grid on;
+xlabel('X');
+ylabel('Y');
+zlabel('\theta');
+title("Env-collision > .5");
+
+% AND three conditions
+combined_score_uniform = y_collision_uniform + y_reach_uniform + y_env_collision_uniform;
+subplot(2,2,4)
+colorScatter3(X_uniform(y_collision_uniform>thres & y_reach_uniform > thres & y_env_collision_uniform > thres,1),...
+              X_uniform(y_collision_uniform>thres & y_reach_uniform > thres & y_env_collision_uniform > thres, 2),...
+              X_uniform(y_collision_uniform>thres & y_reach_uniform > thres & y_env_collision_uniform > thres,3), ...
+              combined_score_uniform(y_collision_uniform>thres & y_reach_uniform >thres & y_env_collision_uniform > thres),...
+              cm);
+view([153 58]); axis square; grid on;
+xlabel('X');
+ylabel('Y');
+zlabel('\theta');
+title("All > .5");
+sgtitle("Model-based scores uniform");
