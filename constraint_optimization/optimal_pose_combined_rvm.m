@@ -39,7 +39,7 @@ X = scale_input(X);
 
 %% Shuffle and divide up the dataset;
 shuffle = true;
-p_test = 0.2;
+p_test = 0.05;
 if shuffle
     % shuffle the dataset;
     idx = randperm(n); 

@@ -1,13 +1,14 @@
 % Need to run optimal_pose_training.m first to save the trained models;
+% Save the workspace, then change the model_path variable to load model.
 
 %% Parameters;
 close all; clear
 rng(0);
 init;
+format shortE;
 
-model_path = "./dvrk_data/saved_model/08_02_2020_15.mat";
-output_path = base_dir + "test";
-
+model_path = "./dvrk_data/saved_model/11_02_2020_19_n1053.mat";
+output_path = base_dir + "pose/";
 
 %% load saved workspace and models
 load(model_path);
@@ -29,8 +30,8 @@ total_time = toc();
 %% Evaluate the scores of the found pose; 
 
 % print scores; 
-reachability_score = clip(scale_output_reach(predict(reachability_mdl, x)),0.0001);
-collision_score = clip(scale_output_collision(predict(self_collision_mdl, x)),0.0001);
+reachability_score = clip(predict(reachability_mdl, x),0.0001);
+collision_score = clip(predict(self_collision_mdl, x),0.0001);
 env_collision_score = clip(predict(env_collision_mdl, x),0.0001);
 scores = [reachability_score, collision_score, env_collision_score];
 
@@ -45,17 +46,21 @@ fprintf("Score: %.3f, functionCount: %d\n", -fval, output.funcCount);
 
 max_score = -fval;
 fCount = output.funcCount;
-% fprintf("Position: [%.3f, %.3f, %.3f]; Predicted self-collision score: %s; Actual: %s\n", x, self_collision_score);
 X_out = [x(1:2), z, x(3), scores, sum(scores)];
 
-fprintf("Maximum score is: %.2f\n", max_score);
+fprintf("Maximum score is: %.2f\n", sum(scores));
 fprintf("Average number of function counts per initialization: %.2f\n", fCount);
 fprintf("Average optimization time per initialization: %.4f\n", total_time);
 
-% Write output
+% Write output for validation;
 if ~exist(output_path, 'dir')
    mkdir(output_path)
 end
     
 path = output_path + "/poses_combined_normalized.csv";
 writematrix(X_out, path);
+
+% Write output for plotting;
+T_svr = [X_out, fCount, total_time];
+result_path = "./results/optimal_pose_svr.mat";
+save(result_path, 'T_svr');
