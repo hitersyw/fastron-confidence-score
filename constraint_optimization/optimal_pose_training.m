@@ -12,7 +12,7 @@ input_path = base_dir + "log/%s_n%d.mat";
 reachability_dataset = 'reachability_score';
 self_collision_dataset = 'self_collision_score';
 environment_collision_dataset = 'env_collision_score';
-n = 1053;
+n = 175;
 n_max = 10; % top n poses to show from the dataset;
 shuffle = true; % whether to shuffle the dataset; 
 p_test = 0.1;
@@ -65,15 +65,15 @@ y_env_collision_train = y_env_collision(ceil(n*p_test+1):n);
 
 %% Train the models
 tic(); 
-self_collision_mdl = trainSVR(X_train, y_self_collision_train, X_test, y_self_collision_test, 33, 1, 0.05);
+self_collision_mdl = trainSVR(X_train, y_self_collision_train, X_test, y_self_collision_test, false, 33, 1, 0.05);
 t_reach_train = toc();
 
 tic();
-env_collision_mdl = trainSVR(X_train, y_env_collision_train, X_test, y_env_collision_test, 0.06, 0.02, 0.1);
+env_collision_mdl = trainSVR(X_train, y_env_collision_train, X_test, y_env_collision_test, false, 0.06, 0.02, 0.1);
 t_self_collision_train = toc();
 
 tic();
-reachability_mdl = trainSVR(X_train, y_reach_train, X_test, y_reach_test, 23, 0.3, 0.0002);
+reachability_mdl = trainSVR(X_train, y_reach_train, X_test, y_reach_test, false, 23, 0.3, 0.0002);
 t_env_collision_train = toc();
 
 %% Predict output and find the max of labels;
