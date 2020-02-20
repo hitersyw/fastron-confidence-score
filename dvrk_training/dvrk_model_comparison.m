@@ -11,7 +11,7 @@ training_datasets = ["reachability_score", "self_collision_score", "env_collisio
 normalized = true;
 g = 1;
 % test_dataset = 'reachability_score_test'; 
-n = 2925;
+n = 640;
 
 metrics = zeros(numel(training_datasets) * numel(models), 4);
 row_names = [];
@@ -145,6 +145,7 @@ T1 = array2table(metrics, ...
     'RowNames', row_names);
 writetable(T1,'./results/regression_models.xls', 'WriteRowNames',true)
 writetable(T1,'./results/regression_models.csv', 'WriteRowNames',true)
+save('./results/regression_models.mat', 'T1'); 
 
 %% Create table for model-based and model-free comparison
 % Use only SVR for comparison with model-free method; 
@@ -160,4 +161,5 @@ T2 = array2table([metrics(row_indices, col_index), total_checks], ...
     'VariableNames', {'Time per Check (sec)', 'Total Time (sec'}, ...
     'RowNames', row_names_T2);
 
-writetable(T2,'./results/model_based.xls', 'WriteRowNames',true)
+result_path = "./results/model_based_vs_model_free.mat";
+save(result_path, 'T2');

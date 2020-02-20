@@ -8,8 +8,9 @@ rng(0);
 init;
 format shortE;
 
-model_path = "./dvrk_data/saved_model/14_02_2020_22_n1053_interpolation.mat";
-output_path = base_dir;
+model_path = "./dvrk_data/saved_model/16_02_2020_18_n640_interpolation.mat";
+output_path = base_dir + "pose/";
+output_name = "pose_19_02_2020_09_n640_interpolation.csv"
 
 %% load saved workspace and models
 load(model_path);
@@ -56,7 +57,7 @@ if ~exist(output_path, 'dir')
    mkdir(output_path)
 end
 
-path = output_path + "/poses_combined_normalized.csv";
+path = output_path + "/" + output_name;
 writematrix(X_out, path);
     
 % Write timing and accuracy result for plotting; 

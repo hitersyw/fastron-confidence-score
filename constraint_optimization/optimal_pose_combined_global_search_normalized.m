@@ -7,16 +7,17 @@ rng(0);
 init;
 format shortE;
 
-model_path = "./dvrk_data/saved_model/11_02_2020_19_n1053.mat";
+model_path = "./dvrk_data/saved_model/16_02_2020_17_n640_svr_weighted.mat";
 output_path = base_dir + "pose/";
+output_name = "pose_16_02_2020_17_SVR_weighted.csv"
 
 %% load saved workspace and models
 load(model_path);
 
 %% Find optimal poses
 % x0 = [-1.0826, -0.3033, -1.309]; % maximum reacability;
-% x0 = [-1.1426, -0.3733, 0.9769]; % maximum combined score from the dataset; 
-x0 = [-1.1726, -0.3433, -1.5590];
+x0 = [-1.1426, -0.3733, 0.9769]; % maximum combined score from the dataset; 
+% x0 = [-1.1726, -0.3433, -1.5590];
 x0 = scale_input(x0);
 z = 0.6599;
 
@@ -30,9 +31,9 @@ total_time = toc();
 %% Evaluate the scores of the found pose; 
 
 % print scores; 
-reachability_score = clip(predict(reachability_mdl, x),0.0001);
-collision_score = clip(predict(self_collision_mdl, x),0.0001);
-env_collision_score = clip(predict(env_collision_mdl, x),0.0001);
+reachability_score = clip(predict(reachability_mdl, x), 0.00001);
+collision_score = clip(predict(self_collision_mdl, x), 0.00001);
+env_collision_score = clip(predict(env_collision_mdl, x), 0.00001);
 scores = [reachability_score, collision_score, env_collision_score];
 
 % scale x back to original scale;
@@ -57,7 +58,7 @@ if ~exist(output_path, 'dir')
    mkdir(output_path)
 end
     
-path = output_path + "/poses_combined_normalized.csv";
+path = output_path + "/" + output_name; 
 writematrix(X_out, path);
 
 % Write output for plotting;
