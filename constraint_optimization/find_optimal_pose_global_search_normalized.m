@@ -1,10 +1,10 @@
-function [x,fval,exitflag, output] = find_optimal_pose_global_search_normalized(x0, lb, ub, self_collision_mdl, reachability_mdl, ...
-            env_collision_mdl, self_collision_scale_output, reachability_scale_output)
+function [x,fval,exitflag, output] = find_optimal_pose_global_search_normalized(x0, n_init, lb, ub, self_collision_mdl, reachability_mdl, ...
+            env_collision_mdl)
 
     % rng(0);
     % gs = GlobalSearch;
     ms = MultiStart;
-    opts = optimoptions(@fmincon,'Algorithm','sqp', 'OptimalityTolerance',1e-6);
+    opts = optimoptions(@fmincon,'Algorithm','sqp', 'OptimalityTolerance',1e-9);
     
     % alphas = [1, 1, 1];
     % Function for computing the optimal pose, with a start configuration;
@@ -26,4 +26,4 @@ function [x,fval,exitflag, output] = find_optimal_pose_global_search_normalized(
         'objective',fun,'lb', lb, 'ub', ub,...
         'options',opts);
     % [x, fval, exitflag,output, ~] = run(gs,problem);
-    [x, fval, exitflag,output, ~] = run(ms,problem, 50);
+    [x, fval, exitflag,output, ~] = run(ms,problem, n_init);

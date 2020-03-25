@@ -1,4 +1,4 @@
-function [x, fval, exitflag, output] = find_pose_interpolation(x0, lb, ub, F_reach, F_self_collision, F_env_collision)
+function [x, fval, exitflag, output] = find_pose_interpolation(x0, n_init, lb, ub, F_reach, F_self_collision, F_env_collision)
     % rng(0);
     % gs = GlobalSearch;
     ms = MultiStart;
@@ -21,4 +21,4 @@ function [x, fval, exitflag, output] = find_pose_interpolation(x0, lb, ub, F_rea
         'objective',fun,'lb', lb, 'ub', ub,...
         'options',opts);
     % [x, fval, exitflag,output, ~] = run(gs,problem);
-    [x, fval, exitflag,output, ~] = run(ms,problem, 50);
+    [x, fval, exitflag,output, ~] = run(ms,problem, n_init);

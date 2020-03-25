@@ -40,10 +40,13 @@ z = 0.6599;
 
 % optimization
 tic();
-[x,fval,exitflag, output] = find_optimal_pose_global_search_normalized(x0, n_init, -ones(1, 3), ones(1, 3), ...
-     self_collision_mdl, reachability_mdl,...
-     env_collision_mdl);
+% [x,fval,exitflag, output] = find_optimal_pose_global_search_normalized(x0, n_init, -ones(1, 3), ones(1, 3), ...
+%     self_collision_mdl, reachability_mdl,...
+%     env_collision_mdl);
 
+[x,F] = find_optimal_pose_goal_attainment(x0, n_init,-ones(1, 3), ones(1, 3), ...
+    [1, 0.7, 1], self_collision_mdl, reachability_mdl,...
+    env_collision_mdl);
 total_time = toc();
 
 %% Evaluate the scores of the found pose; 
@@ -57,17 +60,15 @@ scores = [reachability_score, collision_score, env_collision_score];
 x = (x + 1) / 2; % first scale back to [0, 1];
 x = xmin + x.*(xmax - xmin);
 
+
 fprintf("Position: [%.3f, %.3f, %.3f]; Reachability score is: %s;" ...
         + "Self-collision score: %s; Env-collision score: %s\n",...
         x, reachability_score, collision_score, env_collision_score);
-fprintf("Score: %.3f, functionCount: %d\n", -fval, output.funcCount);
 
-max_score = -fval;
-fCount = output.funcCount;
+max_score = -sum(F);
 X_out = [x(1:2), z, x(3), scores, max_score];
 
 fprintf("Maximum score is: %.2f\n", sum(scores));
-fprintf("Average number of function counts per initialization: %.2f\n", fCount / n_init);
 fprintf("Average optimization time per initialization: %.4f\n", total_time);
 
 % Write output for validation;
@@ -76,8 +77,8 @@ if ~exist(output_path, 'dir')
 end
     
 path = output_path + output_name; 
-writematrix(X_out, path);
+% writematrix(X_out, path);
 
 % Write output for plotting;
-T_svr_op = [X_out, fCount, total_time];
-save(result_path, 'T_svr_op');
+% T_svr_op = [X_out, fCount, total_time];
+% save(result_path, 'T_svr_op');
