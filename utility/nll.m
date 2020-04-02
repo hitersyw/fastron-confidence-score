@@ -1,3 +1,5 @@
+% Compute the negative log likelihood loss of predicited probability p,
+% given label y
 function [s] = nll(p, y)
     y(y==-1)=0;
     p = clip(p, 0.001);

@@ -1,3 +1,4 @@
+% Scattered plot for a 3d dataset, with value V.
 function h = colorScatter3(X, Y, Z, V, cm)
 if max(V)~= min(V)
     V = (V-min(V))/(max(V) - min(V));

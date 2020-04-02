@@ -1,9 +1,11 @@
 .DS_Store
 .ipynb_checkpoints/
 *.m~
-Results/
-DiscriminativeModels.ipynb
+results/
 *.json
 .idea/
-plots
+plots/
 profile_log/
+figures/
+dvrkData/
+artificialData/
