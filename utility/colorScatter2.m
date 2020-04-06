@@ -1,0 +1,11 @@
+% Scattered plot for a 3d dataset, with value V.
+function h = colorScatter2(X, Y, V, cm)
+if max(V)~= min(V)
+    V = (V-min(V))/(max(V) - min(V));
+end
+
+cm_idx = uint32(round((size(cm,1)-1)*V)+1);
+for i = 1:length(X)
+    h(i) = plot(X(i), Y(i), '.', 'color', cm(cm_idx(i), :)); hold on;
+end
+end

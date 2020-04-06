@@ -8,28 +8,18 @@ init;
 format shortE;
 
 %% load saved workspace and models
-n = 175;
+n = 252;
 n_init = 100;
-arm = "psm1"; 
-datetime = "04_03_2020_09";
+arm = "psm2"; 
+datetime = "25_03_2020_11";
 model_path = sprintf("./dvrkData/saved_model/%s_n%d_svr_weighted_%s.mat", datetime, n, arm);
 load(model_path);
 
 %% Define output path; 
 result_path = sprintf("./results/optimal_pose_svr_n%d_%s.mat", n, arm);
 output_path = base_dir + "pose/";
-output_name = sprintf("pose_%s_n%d_SVR_weighted_%s.csv", datetime, n, arm);
+output_name = sprintf("pose_%s_n%d_weightedSVR_%s.csv", datetime, n, arm);
 
-%% load workspace limit
-run('./dvrkData/workspace_limit_near.m');
-
-if arm == "psm1"
-    xmax = xmax_psm1;
-    xmin = xmin_psm1;
-elseif arm == "psm2"
-    xmax = xmax_psm2;
-    xmin = xmin_psm2;
-end
 %% Find optimal poses
 % x0 = [-1.0826, -0.3033, -1.309]; % maximum reacability;
 % x0 = [-1.1426, -0.3733, 0.9769]; % maximum combined score from the dataset; 

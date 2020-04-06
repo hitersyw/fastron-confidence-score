@@ -8,7 +8,7 @@ rng(0);
 init;
 
 % TODO: move this into a common configuration file; 
-arm = "psm1";
+arm = "psm2";
 base_dir = base_dir + 'cone/';
 data_dir = "workspace_x0.3_0.3_y0.3_0.3_two_arms_ik/";
 input_path = base_dir + "log/" + data_dir;
@@ -24,7 +24,7 @@ n_test = 1872;
 n_max = 10; % top n poses to show from the dataset;
 shuffle = true; % whether to shuffle the dataset; 
 tol = 0.125;
-tune_params = false;
+tune_params = true;
 result_path = sprintf("./results/svr_training_weighted_%d_%s.mat", n, arm);
 
 %% Load Training Dataset
@@ -67,7 +67,7 @@ X_test = X_reach_test;
 %% Extract maximum score poses from dataset
 combined_raw_score = y_reach_train + y_self_collision_train + y_env_collision_train;
 top_n = 10;
-[max_poses, max_scores] = max_score_poses(X_train, [y_reach_train, y_self_collision_train, y_env_collision_train, combined_raw_score], n_max);
+[max_poses, max_scores] = maxScorePoses(X_train, [y_reach_train, y_self_collision_train, y_env_collision_train, combined_raw_score], n_max);
 display("Displaying maximum poses and their scores");
 display([max_poses, max_scores]);
 

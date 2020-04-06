@@ -21,7 +21,6 @@ self_collision_dataset = sprintf('self_collision_score_%s', arm);
 environment_collision_dataset = sprintf('env_collision_score_%s', arm);
 n = 1872; % number of samples to use for fitting. 
 shuffle = true; % whether to shuffle up the dataset;
-p_test = 0.1; % percentage of samples used for evaluating test error;
 n_max = 1; % top n pose to show from the dataset. 
 tol = 0.001;
 
