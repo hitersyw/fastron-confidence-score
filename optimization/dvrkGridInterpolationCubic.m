@@ -8,7 +8,7 @@ init;
 format shortE; 
 
 % TODO: move this into a common configuration file; 
-arm = "psm2";
+arm = "psm1";
 base_dir = base_dir + 'cone/';
 data_dir = "workspace_x0.3_0.3_y0.3_0.3_two_arms_ik/";
 input_path = base_dir + "log/" + data_dir;
@@ -18,8 +18,8 @@ reachability_dataset = "reachability_score" + "_" + arm;
 self_collision_dataset = "self_collision_score" + "_" + arm;
 env_collision_dataset = "env_collision_score" + "_" + arm;
 use_fastron = true;
-n = 252;
-n_test = 1872;
+n = 64;
+n_test = 4096;
 n_max = 10; % top n poses to show from the dataset;
 shuffle = true; % whether to shuffle the dataset; 
 tol = 0.001;
@@ -66,7 +66,7 @@ X_test = X_reach_test;
 %% Extract maximum score poses from dataset
 combined_raw_score = y_reach_train + y_self_collision_train + y_env_collision_train;
 top_n = 10;
-[max_poses, max_scores] = max_score_poses(X_train, [y_reach_train, y_self_collision_train, y_env_collision_train, combined_raw_score], n_max);
+[max_poses, max_scores] = maxScorePoses(X_train, [y_reach_train, y_self_collision_train, y_env_collision_train, combined_raw_score], n_max);
 display("Displaying maximum poses and their scores");
 display([max_poses, max_scores]);
 
@@ -83,10 +83,17 @@ xs = numel(unique(X_train(:, 1)));
 ys = numel(unique(X_train(:, 2)));
 zs = numel(unique(X_train(:, 3)));
 
+% Permuation from Python
 xg = permute(reshape(X_train(:, 1), [zs, ys, xs]), [3 2 1]);
 yg = permute(reshape(X_train(:, 2), [zs, ys, xs]), [3 2 1]);
 zg = permute(reshape(X_train(:, 3), [zs, ys, xs]), [3 2 1]);
 
+% % Permutation from Matlab
+% xg = permute(reshape(X_train(:, 1), [zs, ys, xs]), [2, 1, 3]);
+% yg = permute(reshape(X_train(:, 2), [zs, ys, xs]), [2, 1, 3]);
+% zg = permute(reshape(X_train(:, 3), [zs, ys, xs]), [2, 1, 3]);
+
+%%
 y_reach_train_s = permute(reshape(y_reach_train, [zs, ys, xs]), [3 2 1]); % TODO: Use grid config instead of this hardcode;
 y_self_collision_train_s = permute(reshape(y_self_collision_train, [zs, ys, xs]), [3 2 1]);
 y_env_collision_train_s = permute(reshape(y_env_collision_train, [zs, ys, xs]), [3 2 1]);
