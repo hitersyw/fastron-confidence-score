@@ -8,10 +8,10 @@ init;
 format shortE;
 
 %% load saved workspace and models
-n = 252;
+n = 64;
 n_init = 100;
 arm = "psm2"; 
-datetime = "25_03_2020_11";
+datetime = "16_04_2020_19";
 model_path = sprintf("./dvrkData/saved_model/%s_n%d_svr_weighted_%s.mat", datetime, n, arm);
 load(model_path);
 
@@ -21,9 +21,9 @@ output_path = base_dir + "pose/";
 output_name = sprintf("pose_%s_n%d_weightedSVR_%s.csv", datetime, n, arm);
 
 %% Find optimal poses
-% x0 = [-1.0826, -0.3033, -1.309]; % maximum reacability;
+x0 = [-1.0826, -0.3033, -1.309]; % maximum reacability;
 % x0 = [-1.1426, -0.3733, 0.9769]; % maximum combined score from the dataset; 
-x0 = [-1.1726, -0.3433, -1.5590];
+% x0 = [-1.1726, -0.3433, -1.5590];
 x0 = scale_input(x0);
 % x0 = [0, 0, 0];
 z = 0.6599;

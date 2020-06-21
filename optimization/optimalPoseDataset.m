@@ -7,7 +7,7 @@ init;
 format shortE;
 
 arm = "psm1"; 
-datetime = "25_03_2020_10";
+datetime = "16_04_2020_19";
 
 data_dir = "workspace_x0.3_0.3_y0.3_0.3_two_arms_ik/";
 base_dir = base_dir + "cone/";
@@ -19,7 +19,7 @@ output_path = base_dir + "pose/";
 reachability_dataset = sprintf('reachability_score_%s', arm);
 self_collision_dataset = sprintf('self_collision_score_%s', arm);
 environment_collision_dataset = sprintf('env_collision_score_%s', arm);
-n = 1872; % number of samples to use for fitting. 
+n = 4096; % number of samples to use for fitting. 
 shuffle = true; % whether to shuffle up the dataset;
 n_max = 1; % top n pose to show from the dataset. 
 tol = 0.001;
@@ -29,14 +29,19 @@ output_name = sprintf("pose_%s_n%d_dataset_%s.csv", datetime, n, arm);
 result_path = sprintf("./results/optimal_pose_n%d_dataset_%s.mat", n, arm);
 
 %% Load Dataset
-[X_reach, y_reach] = loadDvrk2(input_spec, reachability_dataset, n, use_fastron, false);
-[X_self_collision, y_self_collision] = loadDvrk2(input_spec, self_collision_dataset, n, use_fastron, false);
-[X_env_collision, y_env_collision] = loadDvrk2(input_spec, environment_collision_dataset, n, use_fastron, false);
+[X_reach, y_reach] = loadDvrk2(input_spec, reachability_dataset, n, use_fastron, true);
+[X_self_collision, y_self_collision] = loadDvrk2(input_spec, self_collision_dataset, n, use_fastron, true);
+[X_env_collision, y_env_collision] = loadDvrk2(input_spec, environment_collision_dataset, n, use_fastron, true);
 
 assert(all(X_reach == X_self_collision, 'all'));
 assert(all(X_reach == X_env_collision, 'all'));
 X = X_reach;
 
+%% Combined Score
+y = y_reach + y_self_collision + y_env_collision; 
+figure; clf;
+histogram(y, 10,'Normalization','probability');
+title(sprintf('%s, n:%d', "Combined", n));
 %% Load workspace limit and safety check
 run(input_path + "workspace_limit.m");
 % xmax = max(X_train);

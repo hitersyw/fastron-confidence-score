@@ -58,49 +58,31 @@ y_self_collision_s = permute(reshape(y_self_collision, [zs, ys, xs]), [3 2 1]);
 y_env_collision_s = permute(reshape(y_env_collision, [zs, ys, xs]), [3 2 1]);
 y_combined = y_reach_s + y_self_collision_s + y_env_collision_s; 
 
-
-%% Interpolate and then find the max among the theta dimension
-
-% Define grid over 3D space; 
-x = linspace(xmin(1), xmax(1), 50); % x
-y = linspace(xmin(2), xmax(2), 50); % y
-z = linspace(xmin(3), xmax(3), 50); % theta
-[Xs, Ys, Zs] = meshgrid(x, y, z);
-X_2d = Xs(:, :, 1);
-Y_2d = Ys(:, :, 1);
-
-%% Interpolate over the space;
-f_reach = griddedInterpolant(xg, yg, zg, y_reach_s, 'cubic', 'cubic');
-y_reach_g = f_reach(Xs, Ys, Zs);
-y_reach_max = max(y_reach_g, [], 3);
-% y_reach_max = max(y_reach_s, [], 3);
-
-f_self_collision = griddedInterpolant(xg, yg, zg, y_self_collision_s, 'cubic', 'cubic');
-y_self_collision_g = f_self_collision(Xs, Ys, Zs);
-y_self_collision_max = max(y_self_collision_g, [], 3);
-
-f_env_collision = griddedInterpolant(xg, yg, zg, y_env_collision_s, 'cubic', 'cubic');
-y_env_collision_g = f_env_collision(Xs, Ys, Zs);
-y_env_collision_max = max(y_env_collision_g, [], 3);
-
-y_combined_g = y_reach_g + y_self_collision_g + y_env_collision_g; 
-% Normalize between 0 and 1; 
-y_combined_max = max(y_combined_g, [], 3) / 3;
+y_reach_max = max(y_reach_s, [], 3);
+y_self_collision_max = max(y_self_collision_s, [], 3);
+y_env_collision_max = max(y_env_collision_s, [], 3);
+y_combined_max = max(y_combined, [], 3) / 3;
 
 %% Plot figures
-% Reachability
+nx = 200; ny = 200;
+[X_2d, Y_2d] = meshgrid(linspace(xmin(1), xmax(1), nx), linspace(xmin(2), xmax(2), ny));
+
+%% Reachability
 figure();
 levellist = [0.1 0.25 0.5 0.75 0.9];
 % cm = interp1([0 0.5 1]', [0.4039 0.6627 0.8118; 0.9686 0.9686 0.9686;0.9373 0.5412 0.3843;], linspace(0,1,256)');
 cm = 'parula';
 axis square;
-imagesc([xmin(1) xmax(1)], [xmin(2) xmax(2)], y_reach_max); hold on;
-[cont, cont_h] = contour(X_2d, Y_2d, y_reach_max); hold on;
+img_reach = imresize(y_reach_max, [nx, ny])';
+imagesc([xmin(1) xmax(1)], [xmin(2) xmax(2)], img_reach, [0 1]); hold on;
+% img = imagesc([xmin(1) xmax(1)], [xmin(2) xmax(2)], y_reach_max, [0 1]); hold on;
+% Draw contours;
+[cont, cont_h] = contour(X_2d, Y_2d, img_reach); hold on;
 cont_h.LevelList = levellist;
 cont_h.LineColor = 'k';
 clabel(cont, cont_h, 'Color', 'k', 'FontSize', 6);
 xlabel('X'); 
-ylabel('Y');
+ylabel('Y');  
 title('Reachability');
 hold on;
 colormap(cm);
@@ -108,8 +90,10 @@ colormap(cm);
 %% Self-Collision;
 figure();
 axis square;
-imagesc([xmin(1) xmax(1)], [xmin(2) xmax(2)], y_self_collision_max, [0 1]); hold on;
-[cont, cont_h] = contour(X_2d, Y_2d, y_self_collision_max); hold on;
+
+img_self_collision = imresize(y_self_collision_max, [nx, ny])';
+imagesc([xmin(1) xmax(1)], [xmin(2) xmax(2)], img_self_collision, [0 1]); hold on;
+[cont, cont_h] = contour(X_2d, Y_2d, img_self_collision); hold on;
 cont_h.LevelList = levellist;
 cont_h.LineColor = 'k';
 clabel(cont, cont_h, 'Color', 'k', 'FontSize', 6);
@@ -123,8 +107,9 @@ colormap(cm);
 % Env collision;
 figure();
 axis square;
-imagesc([xmin(1) xmax(1)], [xmin(2) xmax(2)], y_env_collision_max, [0 1]); hold on;
-[cont, cont_h] = contour(X_2d, Y_2d, y_env_collision_max); hold on;
+img_env_collision = imresize(y_env_collision_max, [nx, ny])';
+imagesc([xmin(1) xmax(1)], [xmin(2) xmax(2)], img_env_collision, [0 1]); hold on;
+[cont, cont_h] = contour(X_2d, Y_2d, img_env_collision); hold on;
 cont_h.LevelList = levellist;
 cont_h.LineColor = 'k';
 clabel(cont, cont_h, 'Color', 'k', 'FontSize', 6);
@@ -138,14 +123,40 @@ colormap(cm);
 % Combined Score
 figure();
 axis square;
-imagesc([xmin(1) xmax(1)], [xmin(2) xmax(2)], y_combined_max, [0 1]); hold on;
-[cont, cont_h] = contour(X_2d, Y_2d, y_combined_max); hold on;
+img_combined = imresize(y_combined_max, [nx, ny])';
+imagesc([xmin(1) xmax(1)], [xmin(2) xmax(2)], img_combined, [0 1]); hold on;
+[cont, cont_h] = contour(X_2d, Y_2d, img_combined); hold on;
 cont_h.LevelList = levellist;
 cont_h.LineColor = 'k';
 clabel(cont, cont_h, 'Color', 'k', 'FontSize', 6);
 xlabel('X'); 
 ylabel('Y');
-
 title('Combined Score');
 hold on;
-colormap(cm);
+colormap(cm); hold on;
+
+%% Load the optimal solution found by each method; 
+n_sparse = 64; n_dense = 4096;
+date = "16_04_2020_19";
+file_spec = "./dvrkData/cone/pose/pose_%s_n%d_%s_%s_validated.mat";
+methods = ["weightedSVR", "interpolation", "dataset", "coarse2fine", "dataset"];
+nums = [n_sparse, n_sparse, n_sparse, n_dense, n_dense];
+
+pos = zeros(numel(methods), 3);
+for i = 1:numel(methods)
+    load(sprintf(file_spec, date, nums(i), methods(i), arm));
+    T = validated_score(1:3);
+    pos(i, :) = T;
+end
+
+sz = [20, 20, 20, 50, 20]; % Might have overlapping positions
+colors = [0, 0, 1; 0, 1, 0; 1, 0, 1; 1, 0, 0; 0, 0, 0];
+scArray = [];
+for i=1:numel(methods)
+    sc = scatter(pos(i, 1), pos(i, 2), sz(i), colors(i,:), 'filled'); hold on;
+    scArray = [scArray, sc];
+end
+
+labels = methods;
+labels(3) = "sparse"; labels(5) = "dense";
+legend(scArray, cellstr(labels));

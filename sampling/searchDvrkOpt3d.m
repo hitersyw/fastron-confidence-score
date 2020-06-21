@@ -1,4 +1,4 @@
-function [x, y, z, v] = searchGlobalOpt3(X, Y, Z, V, s)
+function [v, maxInd, numChecks] = searchDvrk3d(X, Y, Z, V, s)
 % Search for the global optimum from a 3D meshdgrid [X, Y, Z], based on 
 % coarse to fine sampling.
 % Input:
@@ -12,6 +12,8 @@ function [x, y, z, v] = searchGlobalOpt3(X, Y, Z, V, s)
 %      y - y coordinate of the optimal point
 %      z - z coordiante of the optimal point
 %      v - value of the point
+maxInd = floor(size(X) / 2); % initialization
+numChecks = 0;
 while s >= 1
     
     ns = size(X) / s; % number of points on each axis; 
@@ -23,7 +25,9 @@ while s >= 1
     zind = linspace(s - d, size(X,3) - d, ns(3));
 
     Vs = V(xind, yind, zind);
+    
     [v, ind] = max(Vs, [], 'all', 'linear');
+    numChecks = numChecks + numel(Vs);
 %     
 %     indices = sub2ind(size(xs), xs(:)', ys(:)');
 %     Vq = V(:); 
@@ -33,7 +37,12 @@ while s >= 1
     [p, q, m] = ind2sub(size(xs), ind);
     i = yind(p); j = xind(q); k = zind(m);
     x = X(i, j, k); y = Y(i, j, k); z = Z(i, j, k); v = V(i, j, k);
-
+    
+    center = floor(size(X) / 2); % Center of the window;
+    offset = [i, j, k] - center; 
+    
+    maxInd = maxInd + offset; 
+    
     fprintf("Maximum value found at (%.1f, %.1f, %.1f): %.2f, stride: %d\n", x, y, z, v, s);
 %     rectangle('Position',[xmin ymin xmax-xmin ymax-ymin], 'EdgeColor','r');
 %     plot(x, y, 'wo');

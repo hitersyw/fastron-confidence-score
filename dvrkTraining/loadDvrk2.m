@@ -20,7 +20,6 @@ function [X, y] = loadDvrk2(input_path, dataset, n, use_fastron, show_dist)
     y = score(:, 5);
     
     if show_dist
-        close all;
         figure; clf;
         histogram(y, 10,'Normalization','probability');
         title(sprintf('%s, n:%d', strrep(dataset, '_', ' '), n));

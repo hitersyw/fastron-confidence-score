@@ -11,10 +11,10 @@ init;
 format shortE;
 
 % Load model;
-n = 252;
+n = 64;
 n_init = 100;
-arm = "psm1"; 
-datetime = "25_03_2020_10";
+arm = "psm2"; 
+datetime = "16_04_2020_19";
 model_path = sprintf("./dvrkData/saved_model/%s_n%d_interpolation_%s.mat", datetime, n, arm);
 load(model_path);
 
@@ -54,7 +54,6 @@ x = xmin + x.*(xmax - xmin);
 max_score = -fval;
 fCount = output.funcCount;
 
-% [x, y, z, theta, reach, self_collision, combined_score, # calls, Time];
 X_out = [x(1:2), z, x(3), scores, sum(scores)];
 
 fprintf("Maximum score is: %.2f\n", sum(scores));
@@ -71,5 +70,6 @@ path = output_path + "/" + output_name;
 fprintf("Writing to output file: %s", path);
 writematrix(X_out, path);
     
+% [x, y, z, theta, reach, self_collision, combined_score, # calls, Time];
 T_interpolation_optimization = [X_out, fCount, total_time];
 save(result_path, 'T_interpolation_optimization');

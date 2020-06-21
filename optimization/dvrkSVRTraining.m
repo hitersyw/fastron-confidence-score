@@ -18,8 +18,8 @@ reachability_dataset = "reachability_score" + "_" + arm;
 self_collision_dataset = "self_collision_score" + "_" + arm;
 env_collision_dataset = "env_collision_score" + "_" + arm;
 use_fastron = true;
-n = 252;
-n_test = 1872;
+n = 64;
+n_test = 4096;
 
 n_max = 10; % top n poses to show from the dataset;
 shuffle = true; % whether to shuffle the dataset; 

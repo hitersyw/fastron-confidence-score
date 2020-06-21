@@ -7,7 +7,7 @@ format shortE;
  
 % Configurations that are subject to change
 arm = "psm2"; 
-datetime = "25_03_2020_10";
+datetime = "16_04_2020_19";
 data_dir = "workspace_x0.3_0.3_y0.3_0.3_two_arms_ik/";
 base_dir = base_dir + "cone/";
 input_path = base_dir + "log/" + data_dir;
@@ -16,9 +16,14 @@ input_spec = input_path + "%s_n%d.mat";
 reachability_dataset = sprintf('reachability_score_%s', arm);
 self_collision_dataset = sprintf('self_collision_score_%s', arm);
 environment_collision_dataset = sprintf('env_collision_score_%s', arm);
-n = 64; % number of samples to use for fitting. 
+n = 4096; % number of samples to use for fitting. 
 tol = 0.001;
 use_fastron = true;
+
+% Define output path;
+result_path = sprintf("./results/optimal_pose_coarse2fine_n%d_%s.mat", n, arm);
+output_path = base_dir + "pose";
+output_name = sprintf("pose_%s_n%d_coarse2fine_%s.csv", datetime, n, arm);
 
 %% Load Dataset
 [X_reach, y_reach] = loadDvrk2(input_spec, reachability_dataset, n, use_fastron, false);
@@ -61,5 +66,24 @@ y_env_collision_s = permute(reshape(y_env_collision, [zs, ys, xs]), [3 2 1]);
 y_combined = y_reach_s + y_self_collision_s + y_env_collision_s; 
 
 %% Search for the global optimum in 3D;
-stride = 1; 
-[x, y, z, v] = searchGlobalOpt3d(xg, yg, zg, y_combined, stride);
+stride = 4; 
+[v, maxInd, numChecks] = searchDvrkOpt3d(xg, yg, zg, y_combined, stride);
+i = maxInd(1); j = maxInd(2); k = maxInd(3);
+x = xg(i,j,k); y = yg(i,j,k); theta = zg(i,j,k); 
+vr = y_reach_s(i,j,k); vs = y_self_collision_s(i,j,k); ve = y_env_collision_s(i,j,k);
+
+z = 0.6599; % hard-coded;
+X_out = [x, y, z, theta, vr, vs, ve, v];  % TODO: extract scores for each dataset for the max
+
+%% Save result
+if ~exist(output_path, 'dir')
+   mkdir(output_path)
+end
+
+path = output_path + "/" + output_name;
+fprintf("Writing to output file: %s", path);
+writematrix(X_out, path);
+    
+T_coarse2fine_search = [X_out, numChecks];
+save(result_path, 'T_coarse2fine_search');
+

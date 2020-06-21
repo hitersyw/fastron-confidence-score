@@ -3,18 +3,18 @@ close all; clear
 rng(0);
 init;
 
-datetime = "02_03_2020_14";
-file_spec = "./dvrk_data/cone/pose/pose_%s_n%d_%s_%s_validated.mat";
-n_sparse = 288;
-n_dense = 1053;
+datetime = "16_04_2020_19";
+file_spec = "./dvrkData/cone/pose/pose_%s_n%d_%s_%s_validated.mat";
+n_sparse = 64;
+n_dense = 4096;
 psm1 = "psm1";
 psm2 = "psm2";
 
 %% SVR
-load(sprintf(file_spec, datetime, n_sparse, "SVR_weighted", psm1));
+load(sprintf(file_spec, datetime, n_sparse, "weightedSVR", psm1));
 T_svr_psm1 = validated_score([6, 9, 12, 15]); % TODO: fix this hardcode;
 
-load(sprintf(file_spec, datetime, n_sparse, "SVR_weighted", psm2));
+load(sprintf(file_spec, datetime, n_sparse, "weightedSVR", psm2));
 T_svr_psm2 = validated_score([6, 9, 12, 15]); % TODO: fix this hardcode;
 
 %% Interpolation
@@ -38,15 +38,24 @@ T_dataset_dense_psm1 = validated_score([6, 9, 12, 15]); % TODO: fix this hardcod
 load(sprintf(file_spec, datetime,  n_dense, "dataset", psm2));
 T_dataset_dense_psm2 = validated_score([6, 9, 12, 15]); % TODO: fix this hardcode;
 
+%% Coarse to fine method
+load(sprintf(file_spec, datetime, n_dense, "coarse2fine", psm1));
+T_coarse2fine_psm1 = validated_score([6, 9, 12, 15]); % TODO: fix this hardcode;
+
+load(sprintf(file_spec, datetime,  n_dense, "coarse2fine", psm2));
+T_coarse2fine_psm2 = validated_score([6, 9, 12, 15]); % TODO: fix this hardcode;
+
 %% Metrics; 
-metrics = {'reachability','self-collision','env-collision'};
-row_names = {'Interpolation', 'Dataset-sparse', 'Regression', 'Dataset-dense'};
-T_psm1 = [T_interpolation_psm1; T_dataset_sparse_psm1; T_svr_psm1; T_dataset_dense_psm1]; 
-T_psm2 = [T_interpolation_psm2; T_dataset_sparse_psm2; T_svr_psm2; T_dataset_dense_psm2]; 
+metrics = {'reachability','self-collision','env-collision', 'combined'};
+row_names = {'Dataset-sparse', 'Interpolation', 'Regression', 'Coarse2fine', 'Dataset-dense (GT)'};
+T_psm1 = [T_dataset_sparse_psm1; T_interpolation_psm1; T_svr_psm1; T_coarse2fine_psm1; T_dataset_dense_psm1]; 
+T_psm2 = [T_dataset_sparse_psm2;T_interpolation_psm2; T_svr_psm2; T_coarse2fine_psm2; T_dataset_dense_psm2]; 
 
 % rescale
-T_psm1 = T_psm1(:, 1:3);
-T_psm2 = T_psm2(:, 1:3);
+% T_psm1 = T_psm1(:, 1:3);
+% T_psm2 = T_psm2(:, 1:3);
+T_psm1(:, 4) = T_psm1(:, 4) / 3;
+T_psm2(:, 4) = T_psm2(:, 4) / 3;
 
 file_spec = './results/interpolation_vs_regression_%s.tex';
 matrix2latex(T_psm1, sprintf(file_spec, psm1), 'rowLabels',row_names, ...

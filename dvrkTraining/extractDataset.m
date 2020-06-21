@@ -6,8 +6,8 @@ format shortE;
 
 % Configurations that are subject to change
 arm = "psm1"; 
-datetime = "25_03_2020_10";
-data_dir = "workspace_x0.3_0.3_y0.3_0.3_two_arms_ik/";
+datetime = "23_04_2020_11";
+data_dir = "workspace_x0.3_0.3_y0.3_0.3_two_arms_ik_2/";
 base_dir = base_dir + "cone/";
 input_path = base_dir + "log/" + data_dir;
 input_spec = input_path + "%s_n%d.mat";
@@ -15,7 +15,7 @@ input_spec = input_path + "%s_n%d.mat";
 reachability_dataset = sprintf('reachability_score_%s', arm);
 self_collision_dataset = sprintf('self_collision_score_%s', arm);
 environment_collision_dataset = sprintf('env_collision_score_%s', arm);
-n = 4096; % number of samples to use for fitting. 
+n = 512; % number of samples to use for fitting. 
 tol = 0.001;
 use_fastron = true;
 
@@ -59,12 +59,17 @@ y_env_collision_s = permute(reshape(y_env_collision, [zs, ys, xs]), [3 2 1]);
 y_combined = y_reach_s + y_self_collision_s + y_env_collision_s; 
 
 %% Extract smaller set from the datasets
-stride = [4, 4, 4];
+stride = [2, 2, 2];
 d = floor(stride ./ 2);
 ns = size(xg)./ stride; 
-xind = linspace(stride(1) - d(1), size(xg,1) - d(1), ns(1));
-yind = linspace(stride(2) - d(2), size(xg,2) - d(2), ns(2));
-zind = linspace(stride(3) - d(3), size(xg,3) - d(3), ns(3));
+% xind = linspace(1, size(xg,1), ns(1));
+% yind = linspace(1, size(xg,2) - d(2), ns(2));
+% zind = linspace(stride(3) - d(3), size(xg,3) - d(3), ns(3));
+
+xind = round(linspace(1, size(xg,1), ns(1)));
+yind = round(linspace(1, size(xg,2), ns(2)));
+zind = round(linspace(1, size(xg,3), ns(3)));
+
 X = xg(xind, yind, zind);
 Y = yg(xind, yind, zind);
 Z = zg(xind, yind, zind);

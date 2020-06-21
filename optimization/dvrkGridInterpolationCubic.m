@@ -8,7 +8,7 @@ init;
 format shortE; 
 
 % TODO: move this into a common configuration file; 
-arm = "psm1";
+arm = "psm2";
 base_dir = base_dir + 'cone/';
 data_dir = "workspace_x0.3_0.3_y0.3_0.3_two_arms_ik/";
 input_path = base_dir + "log/" + data_dir;
@@ -84,29 +84,35 @@ ys = numel(unique(X_train(:, 2)));
 zs = numel(unique(X_train(:, 3)));
 
 % Permuation from Python
-xg = permute(reshape(X_train(:, 1), [zs, ys, xs]), [3 2 1]);
-yg = permute(reshape(X_train(:, 2), [zs, ys, xs]), [3 2 1]);
-zg = permute(reshape(X_train(:, 3), [zs, ys, xs]), [3 2 1]);
+% xg = permute(reshape(X_train(:, 1), [zs, ys, xs]), [3 2 1]);
+% yg = permute(reshape(X_train(:, 2), [zs, ys, xs]), [3 2 1]);
+% zg = permute(reshape(X_train(:, 3), [zs, ys, xs]), [3 2 1]);
+% 
+% y_reach_train_s = permute(reshape(y_reach_train, [zs, ys, xs]), [3 2 1]); % TODO: Use grid config instead of this hardcode;
+% y_self_collision_train_s = permute(reshape(y_self_collision_train, [zs, ys, xs]), [3 2 1]);
+% y_env_collision_train_s = permute(reshape(y_env_collision_train, [zs, ys, xs]), [3 2 1]);
 
 % % Permutation from Matlab
-% xg = permute(reshape(X_train(:, 1), [zs, ys, xs]), [2, 1, 3]);
-% yg = permute(reshape(X_train(:, 2), [zs, ys, xs]), [2, 1, 3]);
-% zg = permute(reshape(X_train(:, 3), [zs, ys, xs]), [2, 1, 3]);
+xg = reshape(X_train(:, 1), [xs, ys, zs]);
+yg = reshape(X_train(:, 2), [zs, ys, xs]);
+zg = reshape(X_train(:, 3), [zs, ys, xs]);
+
+y_reach_train_s = reshape(y_reach_train, [xs, ys, zs]); % TODO: Use grid config instead of this hardcode;
+y_self_collision_train_s = reshape(y_self_collision_train, [xs, ys, zs]);
+y_env_collision_train_s = reshape(y_env_collision_train, [xs, ys, zs]);
+
 
 %%
-y_reach_train_s = permute(reshape(y_reach_train, [zs, ys, xs]), [3 2 1]); % TODO: Use grid config instead of this hardcode;
-y_self_collision_train_s = permute(reshape(y_self_collision_train, [zs, ys, xs]), [3 2 1]);
-y_env_collision_train_s = permute(reshape(y_env_collision_train, [zs, ys, xs]), [3 2 1]);
-
-F_reach = griddedInterpolant(xg, yg, zg, y_reach_train_s, 'cubic', 'cubic');
+tic();
+F_reach = griddedInterpolant(xg, yg, zg, y_reach_train_s, 'spline', 'spline');
 t_reach_train = toc();
 
 tic();
-F_self_collision = griddedInterpolant(xg, yg, zg, y_self_collision_train_s, 'cubic', 'cubic');
+F_self_collision = griddedInterpolant(xg, yg, zg, y_self_collision_train_s, 'spline', 'spline');
 t_self_collision_train = toc();
 
 tic();
-F_env_collision = griddedInterpolant(xg, yg, zg, y_env_collision_train_s, 'cubic', 'cubic');
+F_env_collision = griddedInterpolant(xg, yg, zg, y_env_collision_train_s, 'spline', 'spline');
 t_env_collision_train = toc();
 
 %% Test model performance
