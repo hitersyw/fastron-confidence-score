@@ -10,8 +10,10 @@ format shortE;
 %% load saved workspace and models
 n = 64;
 n_init = 100;
-arm = "psm2"; 
-datetime = "16_04_2020_19";
+arm = "psm1"; 
+
+% DD_MM_YYYY_HH
+datetime = "26_06_2020_10";
 model_path = sprintf("./dvrkData/saved_model/%s_n%d_svr_weighted_%s.mat", datetime, n, arm);
 load(model_path);
 
@@ -30,9 +32,13 @@ z = 0.6599;
 
 % optimization
 tic();
-[x,fval,exitflag, output] = findPoseGlobalSearchNormalized(x0, n_init, -ones(1, 3), ones(1, 3), ...
+
+% weights = [1.0, 1.0, 1.0];
+
+weights = [5.0, 5.0, 1.0]; % self-colllision, reach, env-collision
+[x,fval,exitflag, output] = findPoseGlobalSearchNormalizedWeights(x0, n_init, -ones(1, 3), ones(1, 3), ...
      self_collision_mdl, reachability_mdl,...
-     env_collision_mdl);
+     env_collision_mdl, weights);
 
 total_time = toc();
 

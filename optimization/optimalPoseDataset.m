@@ -59,7 +59,6 @@ assert(all(min(X) >= xmin - tol));
 
 %% Extract maximum score pose from dataset
 combined_raw_score = y_reach + y_self_collision + y_env_collision;
-top_n = 20;
 [max_poses, max_scores_dataset] = maxScorePoses(X, [y_reach, y_self_collision, y_env_collision, combined_raw_score], n_max);
 z = 0.6599;
 X_out = [max_poses(1:2), z, max_poses(3), max_scores_dataset];
