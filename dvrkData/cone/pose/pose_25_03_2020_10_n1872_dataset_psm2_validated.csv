@@ -1,0 +1,2 @@
+X,Y,Z,Theta,reachability_pred,reachability_actual,reachability_diff,self_collision_pred,self_collision_actual,self_collision_diff,env_collision_pred,env_collision_actual,env_collision_diff,combined_pred,combined_actual,combined_diff,X_dist,Y_dist,Theta_dist
+-1.11127272727273,0.440663636363636,0.6599,1.3780000000000001,0.9768518518518521,0.9768518518518519,2.220446049250313e-16,0.757,0.7615,0.0044999999999999485,0.998,0.988,0.010000000000000009,2.731851851851852,2.726351851851852,0.00550000000000006,0.0,0.0,0.0

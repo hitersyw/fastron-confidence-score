@@ -5,6 +5,4 @@ results/
 *.json
 .idea/
 profile_log/
-figures/
-dvrkData/
 artificialData/
