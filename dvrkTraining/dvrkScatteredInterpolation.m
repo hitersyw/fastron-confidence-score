@@ -9,7 +9,7 @@ format shortE;
 
 % TODO: move this into a common configuration file; 
 arm = "psm1";
-input_path = base_dir + "log/workspace_x0.1_0.3_y0.1_0.3_two_arms/%s_n%d.mat";
+input_path = base_dir + "samples/workspace_x0.1_0.3_y0.1_0.3_two_arms/%s_n%d.mat";
 reachability_dataset = "reachability_score" + "_" + arm;
 self_collision_dataset = "self_collision_score" + "_" + arm;
 env_collision_dataset = "env_collision_score" + "_" + arm;

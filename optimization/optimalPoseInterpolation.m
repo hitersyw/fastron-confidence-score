@@ -15,7 +15,7 @@ n = 64;
 n_init = 100;
 arm = "psm2"; 
 datetime = "16_04_2020_19";
-model_path = sprintf("./dvrkData/saved_model/%s_n%d_interpolation_%s.mat", datetime, n, arm);
+model_path = sprintf("./dvrkData/cone/saved_model/%s_n%d_interpolation_%s.mat", datetime, n, arm);
 load(model_path);
 
 % arm = "psm1"; % TODO: this is because when we load model_path, psm1 is included and we need to reset it. 

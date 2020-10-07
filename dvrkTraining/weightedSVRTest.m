@@ -7,7 +7,7 @@ close all; clear
 rng(0);
 init;
 
-input_path = base_dir + "convex_hull/log/%s_n%d.mat";
+input_path = base_dir + "convex_hull/samples/%s_n%d.mat";
 
 reachability_dataset = 'reachability_score';
 self_collision_dataset = 'self_collision_score';

@@ -4,7 +4,7 @@ close all; clear
 rng(0);
 init;
 
-input_path = base_dir + "log/%s_n%d.mat";
+input_path = base_dir + "samples/%s_n%d.mat";
 output_path = base_dir + "pose/poses_%s.csv";
 
 dataset = 'environment_collision_score';

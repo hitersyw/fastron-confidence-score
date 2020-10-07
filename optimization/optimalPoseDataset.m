@@ -11,7 +11,7 @@ datetime = "16_04_2020_19";
 
 data_dir = "workspace_x0.3_0.3_y0.3_0.3_two_arms_ik/";
 base_dir = base_dir + "cone/";
-input_path = base_dir + "log/" + data_dir;
+input_path = base_dir + "samples/" + data_dir;
 input_spec = input_path + "%s_n%d.mat";
 
 output_path = base_dir + "pose/";

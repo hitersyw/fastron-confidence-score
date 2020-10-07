@@ -4,7 +4,7 @@
 % base_dir: the base directory to load the dataset from;
 % n: number of samples in the file.
 function [y_combined_max, xmin, xmax] = loadCombinedScore(arm, data_dir, base_dir, n)
-    input_path = base_dir + "log/" + data_dir;
+    input_path = base_dir + "samples/" + data_dir;
     input_spec = input_path + "%s_n%d.mat";
 
     reachability_dataset = sprintf('reachability_score_%s', arm);

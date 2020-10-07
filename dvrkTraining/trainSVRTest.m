@@ -4,7 +4,7 @@ close all; clear
 rng(0);
 init;
 
-input_path = base_dir + "log/workspace_x0.25_0.15_y0.15_0.25/%s_n%d.mat";
+input_path = base_dir + "samples/workspace_x0.25_0.15_y0.15_0.25/%s_n%d.mat";
 n_total = 640;
 s = 1;
 scale_label = @(y) s.*y;

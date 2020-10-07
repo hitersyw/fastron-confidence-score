@@ -11,7 +11,7 @@ format shortE;
 arm = "psm2";
 base_dir = base_dir + 'cone/';
 data_dir = "workspace_x0.3_0.3_y0.3_0.3_two_arms_ik/";
-input_path = base_dir + "log/" + data_dir;
+input_path = base_dir + "samples/" + data_dir;
 
 input_spec = input_path + "%s_n%d.mat";
 reachability_dataset = "reachability_score" + "_" + arm;

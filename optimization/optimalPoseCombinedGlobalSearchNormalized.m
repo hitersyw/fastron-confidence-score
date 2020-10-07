@@ -1,41 +1,40 @@
 % Need to run optimal_pose_training.m first to save the trained models;
 % Save the workspace, then change the model_path variable to load model.
 
-%% Parameters;
 close all; clear
 rng(0);
 init;
 format shortE;
 
-%% load saved workspace and models
+%% Parameters;
 n = 64;
 n_init = 100;
 arm = "psm1"; 
+weights = [1.0, 5.0, 1.0]; % self-colllision, reach, env-collision
 
 % DD_MM_YYYY_HH
-datetime = "26_06_2020_10";
-model_path = sprintf("./dvrkData/saved_model/%s_n%d_svr_weighted_%s.mat", datetime, n, arm);
+model_datetime = "26_06_2020_10";
+output_datetime = "06_10_2020_09";
+
+%% load saved workspace and models
+model_path = sprintf("./dvrkData/saved_model/%s_n%d_svr_weighted_%s.mat", model_datetime, n, arm);
 load(model_path);
 
 %% Define output path; 
 result_path = sprintf("./results/optimal_pose_svr_n%d_%s.mat", n, arm);
 output_path = base_dir + "pose/";
-output_name = sprintf("pose_%s_n%d_weightedSVR_%s.csv", datetime, n, arm);
+output_name = sprintf("pose_%s_n%d_weightedSVR_%s.csv", output_datetime, n, arm);
 
 %% Find optimal poses
-x0 = [-1.0826, -0.3033, -1.309]; % maximum reacability;
+% x0 = [-1.0826, -0.3033, -1.309]; % maximum reacability;
 % x0 = [-1.1426, -0.3733, 0.9769]; % maximum combined score from the dataset; 
 % x0 = [-1.1726, -0.3433, -1.5590];
-x0 = scale_input(x0);
-% x0 = [0, 0, 0];
+% x0 = scale_input(x0);
+x0 = [0, 0, 0];
 z = 0.6599;
 
 % optimization
 tic();
-
-% weights = [1.0, 1.0, 1.0];
-
-weights = [5.0, 5.0, 1.0]; % self-colllision, reach, env-collision
 [x,fval,exitflag, output] = findPoseGlobalSearchNormalizedWeights(x0, n_init, -ones(1, 3), ones(1, 3), ...
      self_collision_mdl, reachability_mdl,...
      env_collision_mdl, weights);

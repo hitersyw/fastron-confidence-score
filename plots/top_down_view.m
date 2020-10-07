@@ -10,7 +10,6 @@ tl = [0, -0.875];
 br = [1.75 0.875];
 
 %% Display the raw scores from image;
-
 % Configurations that are subject to change
 data_dir = "workspace_x0.3_0.3_y0.3_0.3_two_arms_ik_2/";
 base_dir = base_dir + "cone/";

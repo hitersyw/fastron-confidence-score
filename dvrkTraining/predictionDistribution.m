@@ -6,7 +6,7 @@ init;
 g = 50; 
 
 % Change the input directories here.
-input_path = base_dir + 'cone/log/workspace_x0.1_0.3_y0.1_0.3/%s_n%d.mat';
+input_path = base_dir + 'cone/samples/workspace_x0.1_0.3_y0.1_0.3/%s_n%d.mat';
 
 dataset = 'reachability_score';
 n = 1053;
