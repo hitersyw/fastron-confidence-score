@@ -42,11 +42,9 @@
 
 # Optimized Poses
 
-```
-Equal weights            							|  Boosting reachability               |  Boosting self-collision-free    | Boosting environment-collision-free
-:-------------------------:							|:-------------------------:           |:-------------------------:       |:-------------------------:
-![Optimized Poses with equal weights][https://github.com/jamesdi1993/fastron-confidence-score/tree/master/figures/final_poses/optimized_1_1_1.png]  |  ![Optimized Poses boosting reachability][https://github.com/jamesdi1993/fastron-confidence-score/tree/master/figures/final_poses/optimized_5_1_1.png] | ![Optimized Poses boosting self-collision-free][https://github.com/jamesdi1993/fastron-confidence-score/tree/master/figures/final_poses/optimized_1_5_1.png] | ![Optimized Poses boosting environment-collision-free][https://github.com/jamesdi1993/fastron-confidence-score/tree/master/figures/final_poses/optimized_1_1_5.png]
-```
+| Equal weights                                                |                    Boosting reachability                     |                 Boosting self-collision-free                 |             Boosting environment-collision-free              |
+| ------------------------------------------------------------ | :----------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
+| ![Optimized Poses with equal weights][https://github.com/jamesdi1993/fastron-confidence-score/tree/master/figures/final_poses/optimized_1_1_1.png] | ![Optimized Poses boosting reachability][https://github.com/jamesdi1993/fastron-confidence-score/tree/master/figures/final_poses/optimized_5_1_1.png] | ![Optimized Poses boosting self-collision-free][https://github.com/jamesdi1993/fastron-confidence-score/tree/master/figures/final_poses/optimized_1_5_1.png] | ![Optimized Poses boosting environment-collision-free][https://github.com/jamesdi1993/fastron-confidence-score/tree/master/figures/final_poses/optimized_1_1_5.png] |
 
 
 
