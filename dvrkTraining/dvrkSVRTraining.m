@@ -17,7 +17,6 @@ input_spec = input_path + "%s_n%d.mat";
 reachability_dataset = "reachability_score" + "_" + arm;
 self_collision_dataset = "self_collision_score" + "_" + arm;
 env_collision_dataset = "env_collision_score" + "_" + arm;
-use_fastron = true;
 n = 64;
 n_test = 4096;
 
@@ -28,9 +27,9 @@ tune_params = true;
 result_path = sprintf("./results/svr_training_weighted_%d_%s.mat", n, arm);
 
 %% Load Training Dataset
-[X_reach_train, y_reach_train] = loadDvrk2(input_spec, reachability_dataset, n, use_fastron,false);
-[X_self_collision_train, y_self_collision_train] = loadDvrk2(input_spec, self_collision_dataset, n, use_fastron, false);
-[X_env_collision_train, y_env_collision_train] = loadDvrk2(input_spec, env_collision_dataset, n, use_fastron, false);
+[X_reach_train, y_reach_train] = loadDvrk2(input_spec, reachability_dataset, n, false);
+[X_self_collision_train, y_self_collision_train] = loadDvrk2(input_spec, self_collision_dataset, n, false);
+[X_env_collision_train, y_env_collision_train] = loadDvrk2(input_spec, env_collision_dataset, n, false);
 
 % safety check;
 assert(all(X_reach_train == X_self_collision_train, 'all'));
@@ -53,9 +52,9 @@ assert(all(max(X_train) <= xmax + tol));
 assert(all(min(X_train) >= xmin - tol));
 
 %% Load Test Dataset and safety check;
-[X_reach_test, y_reach_test] = loadDvrk2(input_spec, reachability_dataset, n_test, use_fastron,false);
-[X_self_collision_test, y_self_collision_test] = loadDvrk2(input_spec, self_collision_dataset, n_test, use_fastron,false);
-[X_env_collision_test, y_env_collision_test] =  loadDvrk2(input_spec, env_collision_dataset, n_test, use_fastron,false);
+[X_reach_test, y_reach_test] = loadDvrk2(input_spec, reachability_dataset, n_test, false);
+[X_self_collision_test, y_self_collision_test] = loadDvrk2(input_spec, self_collision_dataset, n_test, false);
+[X_env_collision_test, y_env_collision_test] =  loadDvrk2(input_spec, env_collision_dataset, n_test, false);
 % Safety Check;
 assert(all(X_reach_test == X_self_collision_test, 'all'));
 assert(all(X_reach_test == X_env_collision_test, 'all'));

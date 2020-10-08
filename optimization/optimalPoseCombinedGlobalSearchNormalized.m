@@ -13,11 +13,11 @@ arm = "psm1";
 weights = [1.0, 5.0, 1.0]; % self-colllision, reach, env-collision
 
 % DD_MM_YYYY_HH
-model_datetime = "26_06_2020_10";
-output_datetime = "06_10_2020_09";
+model_datetime = "06_10_2020_23";
+output_datetime = "06_10_2020_23";
 
 %% load saved workspace and models
-model_path = sprintf("./dvrkData/saved_model/%s_n%d_svr_weighted_%s.mat", model_datetime, n, arm);
+model_path = sprintf("./dvrkData/cone/saved_model/%s_n%d_svr_weighted_%s.mat", model_datetime, n, arm);
 load(model_path);
 
 %% Define output path; 
